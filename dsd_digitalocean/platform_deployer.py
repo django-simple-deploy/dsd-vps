@@ -49,6 +49,7 @@ from pathlib import Path
 from django.utils.safestring import mark_safe
 
 import requests
+import paramiko
 
 from . import deploy_messages as platform_msgs
 
@@ -80,8 +81,8 @@ class PlatformDeployer:
 
         # Update server.
         # Run a read-only command through SSH.
-        print("HERE")
-        breakpoint()
+        self._update_server()
+        
 
         self._conclude_automate_all()
         self._show_success_message()
@@ -102,6 +103,33 @@ class PlatformDeployer:
     def _prep_automate_all(self):
         """Take any further actions needed if using automate_all."""
         pass
+
+
+    def _update_server(self):
+        """Update the server.
+
+        This should be idempotent, if at all possible.
+        """
+        print("HERE")
+
+        cmd = "ls -alh"
+        host = os.environ.get("DSD_HOST_IPADDR")
+        username = os.environ.get("DSD_HOST_USERNAME")
+        password = os.environ.get("DSD_HOST_PW")
+
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        breakpoint()
+
+        try:
+            client.connect(hostname=host, username=username, password=password)
+            stdin, stdout, stderr = client.exec_command(cmd)
+        finally:
+            client.close()
+
+
+
+        breakpoint()
 
 
     def _conclude_automate_all(self):
