@@ -11,7 +11,6 @@ def run_server_cmd_ssh(cmd):
     Returns:
         Tuple of Str: (stdout, stderr)
     """
-
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
