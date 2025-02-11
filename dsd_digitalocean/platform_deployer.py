@@ -52,6 +52,7 @@ import requests
 import paramiko
 
 from . import deploy_messages as platform_msgs
+from . import utils as do_utils
 
 from django_simple_deploy.management.commands.utils import plugin_utils
 from django_simple_deploy.management.commands.utils.plugin_utils import dsd_config
@@ -112,22 +113,23 @@ class PlatformDeployer:
         """
         plugin_utils.write_output("Updating server (this may take a few minutes)...")
 
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # client = paramiko.SSHClient()
+        # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         cmd = "sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y"
         plugin_utils.write_output(f"  Update command: $ {cmd}")
-        try:
-            client.connect(
-                hostname = os.environ.get("DSD_HOST_IPADDR"),
-                username = os.environ.get("DSD_HOST_USERNAME"),
-                password = os.environ.get("DSD_HOST_PW"),
-            )
-            _stdin, _stdout, _stderr = client.exec_command(cmd)
-            stdout = _stdout.read().decode().strip()
-            stderr = _stderr.read().decode().strip()
-        finally:
-            client.close()
+        # try:
+        #     client.connect(
+        #         hostname = os.environ.get("DSD_HOST_IPADDR"),
+        #         username = os.environ.get("DSD_HOST_USERNAME"),
+        #         password = os.environ.get("DSD_HOST_PW"),
+        #     )
+        #     _stdin, _stdout, _stderr = client.exec_command(cmd)
+        #     stdout = _stdout.read().decode().strip()
+        #     stderr = _stderr.read().decode().strip()
+        # finally:
+        #     client.close()
+        stdout, stderr = do_utils.run_server_cmd_ssh(cmd)
 
         if stdout:
             plugin_utils.write_output(stdout)
