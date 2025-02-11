@@ -110,11 +110,13 @@ class PlatformDeployer:
 
         This should be idempotent, if at all possible.
         """
+        plugin_utils.write_output("Updating server...")
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        cmd = "df"
+        cmd = "sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y"
+        plugin_utils.write_output(f"  Update command: $ {cmd}")
         try:
             client.connect(
                 hostname = os.environ.get("DSD_HOST_IPADDR"),
@@ -122,12 +124,21 @@ class PlatformDeployer:
                 password = os.environ.get("DSD_HOST_PW"),
             )
             _stdin, _stdout, _stderr = client.exec_command(cmd)
-            stdout = _stdout.read().decode()
+            stdout = _stdout.read().decode().strip()
+            stderr = _stderr.read().decode().strip()
         finally:
             client.close()
 
+        if stdout:
+            plugin_utils.write_output(stdout)
+        if stderr:
+            plugin_utils.write_output(stderr)
+
+        plugin_utils.write_output("  Finished updating server.")
+
         breakpoint()
 
+        # Reboot if required. If so, call this function again. Add messages.
 
 
 
