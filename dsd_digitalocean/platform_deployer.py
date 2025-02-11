@@ -110,26 +110,26 @@ class PlatformDeployer:
 
         This should be idempotent, if at all possible.
         """
-        print("HERE")
-
-        cmd = "ls -alh"
-        host = os.environ.get("DSD_HOST_IPADDR")
-        username = os.environ.get("DSD_HOST_USERNAME")
-        password = os.environ.get("DSD_HOST_PW")
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        breakpoint()
 
+        cmd = "df"
         try:
-            client.connect(hostname=host, username=username, password=password)
-            stdin, stdout, stderr = client.exec_command(cmd)
+            client.connect(
+                hostname = os.environ.get("DSD_HOST_IPADDR"),
+                username = os.environ.get("DSD_HOST_USERNAME"),
+                password = os.environ.get("DSD_HOST_PW"),
+            )
+            _stdin, _stdout, _stderr = client.exec_command(cmd)
+            stdout = _stdout.read().decode()
         finally:
             client.close()
 
-
-
         breakpoint()
+
+
+
 
 
     def _conclude_automate_all(self):
