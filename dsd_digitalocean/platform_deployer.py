@@ -110,7 +110,7 @@ class PlatformDeployer:
 
         This should be idempotent, if at all possible.
         """
-        plugin_utils.write_output("Updating server...")
+        plugin_utils.write_output("Updating server (this may take a few minutes)...")
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
