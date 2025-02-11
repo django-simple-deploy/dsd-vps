@@ -76,7 +76,12 @@ class PlatformDeployer:
         self._validate_platform()
         self._prep_automate_all()
 
-        # Configure project for deployment to Digital Ocean
+        # Configure project for deployment to Digital Ocean.
+
+        # Update server.
+        # Run a read-only command through SSH.
+        print("HERE")
+        breakpoint()
 
         self._conclude_automate_all()
         self._show_success_message()
