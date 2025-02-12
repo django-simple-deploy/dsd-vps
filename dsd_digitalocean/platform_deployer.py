@@ -44,6 +44,7 @@ Add a set of requirements:
 """
 
 import sys, os, re, json
+import time
 from pathlib import Path
 
 from django.utils.safestring import mark_safe
@@ -123,9 +124,32 @@ class PlatformDeployer:
 
         plugin_utils.write_output("  Finished updating server.")
 
-        breakpoint()
+        # breakpoint()
 
         # Reboot if required. If so, call this function again. Add messages.
+        plugin_utils.write_output("  Checking if reboot required...")
+        cmd = "ls /var/run"
+        stdout, stderr = do_utils.run_server_cmd_ssh(cmd)
+
+        if "reboot-required" in stdout:
+            plugin_utils.write_output("  Rebooting...")
+            cmd = "sudo shutdown -r now"
+            stdout, stderr = do_utils.run_server_cmd_ssh(cmd)
+
+            # Pause to let shutdown begin; polling too soon passes before shutdown
+            # happens.
+            time.sleep(5)
+
+            # Poll for availability.
+            if not do_utils.check_server_available():
+                raise DSDCommandError("Cannot reach server.")
+
+            # Call this function again, to see if new updates show up after rebooting.
+            # This is most likely to happen with a fresh VM.
+            self._update_server()
+        else:
+            plugin_utils.write_output("  No reboot required.")
+
 
 
 
