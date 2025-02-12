@@ -112,10 +112,13 @@ class PlatformDeployer:
         This should be idempotent, if at all possible.
         """
         plugin_utils.write_output("Updating server (this may take a few minutes)...")
+        if dsd_config.unit_testing:
+            plugin_utils.write_output("  (skipped during testing)")
+            return
 
         cmd = "sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y"
         plugin_utils.write_output(f"  Update command: $ {cmd}")
-        stdout, stderr = do_utils.run_server_cmd_ssh(cmd)
+        stdout, stderr = "", ""#do_utils.run_server_cmd_ssh(cmd)
 
         if stdout:
             plugin_utils.write_output(stdout)
