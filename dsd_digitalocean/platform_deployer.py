@@ -124,7 +124,7 @@ class PlatformDeployer:
         # Reboot if required. If so, call this function again. Add messages.
         plugin_utils.write_output("  Checking if reboot required...")
         cmd = "ls /var/run"
-        stdout, stderr = do_utils.run_server_cmd_ssh(cmd)
+        stdout, stderr = do_utils.run_server_cmd_ssh(cmd, show_output=False)
 
         if "reboot-required" in stdout:
             plugin_utils.write_output("  Rebooting...")

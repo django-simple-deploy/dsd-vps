@@ -8,7 +8,7 @@ import paramiko
 from django_simple_deploy.management.commands.utils import plugin_utils
 
 
-def run_server_cmd_ssh(cmd, timeout=10):
+def run_server_cmd_ssh(cmd, timeout=10, show_output=True):
     """Run a command on the server, through an SSH connection.
 
     Returns:
@@ -32,9 +32,9 @@ def run_server_cmd_ssh(cmd, timeout=10):
     finally:
         client.close()
 
-    if stdout:
+    if stdout and show_output:
         plugin_utils.write_output(stdout)
-    if stderr:
+    if stderr and show_output:
         plugin_utils.write_output(stderr)
 
     return stdout, stderr
