@@ -1,7 +1,16 @@
 """Manages all Digital Ocean-specific aspects of the deployment process.
 
-Notes:
+VPS notes:
+
+- All actions taken against the server should be idempotent if at all possible. If an
+  action is not idempotent, that should be noted.
+
+DO notes:
+
 - 
+
+
+General plugin development notes:
 
 Add a new file to the user's project, without using a template:
 
@@ -107,10 +116,7 @@ class PlatformDeployer:
 
 
     def _update_server(self):
-        """Update the server.
-
-        This should be idempotent, if at all possible.
-        """
+        """Update the server."""
         # Don't update during unit and integration testing.
         plugin_utils.write_output("Updating server (this may take a few minutes)...")
         if dsd_config.unit_testing:
@@ -120,39 +126,11 @@ class PlatformDeployer:
         # Run update command.
         cmd = "sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y"
         stdout, stderr = do_utils.run_server_cmd_ssh(cmd)
-
         plugin_utils.write_output("  Finished updating server.")
 
-        # See if we need to reboot after updating.
+        # See if we need to reboot. If rebooted, check for updates again. This is most
+        # likely needed with a fresh VM, after its first round of updates.
         rebooted = do_utils.reboot_if_required()
-
-        # Reboot if required. If so, call this function again. Add messages.
-        # plugin_utils.write_output("  Checking if reboot required...")
-        # cmd = "ls /var/run"
-        # stdout, stderr = do_utils.run_server_cmd_ssh(cmd, show_output=False)
-
-
-        # if "reboot-required" in stdout:
-        #     plugin_utils.write_output("  Rebooting...")
-        #     cmd = "sudo shutdown -r now"
-        #     stdout, stderr = do_utils.run_server_cmd_ssh(cmd)
-
-        #     # Pause to let shutdown begin; polling too soon passes before shutdown
-        #     # happens.
-        #     time.sleep(5)
-
-        #     # Poll for availability.
-        #     if not do_utils.check_server_available():
-        #         raise DSDCommandError("Cannot reach server.")
-
-        #     # Call this function again, to see if new updates show up after rebooting.
-        #     # This is most likely to happen with a fresh VM.
-        #     self._update_server()
-        # else:
-        #     plugin_utils.write_output("  No reboot required.")
-
-        # If rebooted, check for updates again. This is most likely to be needed with
-        # a fresh VM, after its first round of updates.
         if rebooted:
             self._update_server()
 
