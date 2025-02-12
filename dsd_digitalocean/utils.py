@@ -40,6 +40,37 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True):
     return stdout, stderr
 
 
+def reboot_if_required():
+    """Reboot the server if required.
+
+    Returns:
+        bool: True if rebooted, False if not rebooted.
+    """
+    plugin_utils.write_output("Checking if reboot required...")
+
+    cmd = "ls /var/run"
+    stdout, stderr = run_server_cmd_ssh(cmd, show_output=False)
+
+    if "reboot-required" in stdout:
+        plugin_utils.write_output("  Rebooting...")
+        cmd = "sudo shutdown -r now"
+        stdout, stderr = run_server_cmd_ssh(cmd)
+
+        # Pause to let shutdown begin; polling too soon passes before shutdown
+        # happens.
+        time.sleep(5)
+
+        # Poll for availability.
+        if not check_server_available():
+            raise DSDCommandError("Cannot reach server after reboot.")
+        return True
+    else:
+        plugin_utils.write_output("  No reboot required.")
+        return False
+
+
+
+
 def check_server_available(delay=10, timeout=300):
     """Check if the server is responding.
 
@@ -66,7 +97,9 @@ def check_server_available(delay=10, timeout=300):
             return True
         except TimeoutError:
             plugin_utils.write_output(f"  Attempt {attempt+1}/{max_attempts} failed.")
+            plugin_utils.write_output(f"    Waiting {delay}s for server to become available.")
             time.sleep(delay)
 
     plugin_utils.write_output("Server did not respond.")
     return False
+
