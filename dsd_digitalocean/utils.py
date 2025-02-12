@@ -14,6 +14,8 @@ def run_server_cmd_ssh(cmd, timeout=10):
     Returns:
         Tuple of Str: (stdout, stderr)
     """
+    plugin_utils.write_output("Running server command over SSH...")
+    plugin_utils.write_output(f"  command: {cmd}")
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -29,6 +31,11 @@ def run_server_cmd_ssh(cmd, timeout=10):
         stderr = _stderr.read().decode().strip()
     finally:
         client.close()
+
+    if stdout:
+        plugin_utils.write_output(stdout)
+    if stderr:
+        plugin_utils.write_output(stderr)
 
     return stdout, stderr
 
