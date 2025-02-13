@@ -91,6 +91,7 @@ class PlatformDeployer:
 
         # Update server.
         # Run a read-only command through SSH.
+        self._connect_server()
         self._update_server()
         self._setup_server()
         
@@ -114,6 +115,11 @@ class PlatformDeployer:
     def _prep_automate_all(self):
         """Take any further actions needed if using automate_all."""
         pass
+
+
+    def _connect_server(self):
+        """Make sure we can connect to the server, with an appropriate username."""
+        do_utils.set_server_username()
 
 
     def _update_server(self):
@@ -141,8 +147,9 @@ class PlatformDeployer:
         Roughly follows a standard Ubuntu server setup guide, such as:
         - https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu
         """
-        do_utils.add_server_user()
-        do_utils.add_firewall()
+        # do_utils.add_server_user()
+        # do_utils.add_firewall()
+        pass
 
 
 

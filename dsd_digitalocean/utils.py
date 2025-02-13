@@ -31,7 +31,7 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
     try:
         client.connect(
             hostname = os.environ.get("DSD_HOST_IPADDR"),
-            username = os.environ.get("DSD_HOST_USERNAME"),
+            username = dsd_config.server_username,
             password = os.environ.get("DSD_HOST_PW"),
             timeout = timeout
         )
@@ -50,6 +50,47 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
 
     # Return both stdout and stderr.
     return stdout, stderr
+
+def set_server_username():
+    """Sets dsd_config.server_username, for logging into the server.
+
+    The username will either be set through an env var, or django_user from
+    an earlier run, or root if no non-root user has been added yet, ie for
+    a fresh VM. If it's root, we'll add a new user.
+
+    - DO_DJANGO_USER gets priority if it's set.
+    - Then, try django_user.
+    - If django_user is not available, use root to add django_user.
+
+    Returns:
+        None
+    Sets:
+        dsd_config.server_username
+    Raises:
+        DSDCommandError: If unable to connect to server and establish a username.
+    """
+    plugin_utils.write_output("Determining server username...")
+
+    if (username := os.environ.get("DO_DJANGO_USER")):
+        # Use this custom username.
+        dsd_config.server_username = username
+        plugin_utils.write_output(f"  username: {username}")
+        return
+
+    # No custom username. Try to connect with default username.
+    dsd_config.server_username = "django_user"
+    try:
+        run_server_cmd_ssh("uptime")
+    except paramiko.ssh_exception.AuthenticationException:
+        # Default non-root user doesn't exist.
+        dsd_config.server_username = "root"
+    else:
+        # Default username works, we're done here.
+        plugin_utils.write_output(f"  username: {username}")
+        return
+
+    add_server_user()
+    plugin_utils.write_output(f"  username: {dsd_config.server_username}")
 
 
 def reboot_if_required():
@@ -115,27 +156,39 @@ def check_server_available(delay=10, timeout=300):
 
 def add_server_user():
     """Add a non-root user.
-
-    Only if current user is root.
-
     Returns:
         None
+    Raises:
+        DSDCommandError: If unable to connect using new user.
     """
-    username = os.environ.get("DSD_HOST_USERNAME")
-    if (username != "root") or dsd_config.unit_testing:
-        return
+    # # Leave if there's already a non-root user.
+    # username = os.environ.get("DSD_HOST_USERNAME")
+    # if (username != "root") or dsd_config.unit_testing:
+    #     return
 
-    plugin_utils.write_output("Adding non-root user...")
+    # Add the new user.
     django_username = "django_user"
-
+    plugin_utils.write_output(f"Adding non-root user: {django_username}")
     cmd = f"useradd -m {django_username}"
     run_server_cmd_ssh(cmd)
 
+    # Set the password.
+    plugin_utils.write_output("  Setting password; will not display or log this.")
     password = os.environ.get("DSD_HOST_PW")
     cmd = f'echo "{django_username}:{password}" | chpasswd'
+    run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
 
-    run_server_cmd_ssh(cmd, skip_logging=True)
+    # Add user to sudo group.
+    plugin_utils.write_output("  Adding user to sudo group.")
+    cmd = f"usermod -aG sudo {django_username}"
+    run_server_cmd_ssh(cmd)
 
+    # Use the new user from this point forward.
+    dsd_config.server_username = django_username
 
-
+    # Verify connection.
+    plugin_utils.write_output("  Ensuring connection...")
+    if not check_server_available():
+        msg = "Could not connect with new user."
+        raise DSDCommandError(msg)
 
