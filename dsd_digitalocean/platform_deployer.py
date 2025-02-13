@@ -92,6 +92,7 @@ class PlatformDeployer:
         # Update server.
         # Run a read-only command through SSH.
         self._update_server()
+        self._setup_server()
         
 
         self._conclude_automate_all()
@@ -133,6 +134,16 @@ class PlatformDeployer:
         rebooted = do_utils.reboot_if_required()
         if rebooted:
             self._update_server()
+
+    def _setup_server(self):
+        """Run initial server setup.
+
+        Roughly follows a standard Ubuntu server setup guide, such as:
+        - https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu
+        """
+        do_utils.add_server_user()
+        do_utils.add_firewall()
+
 
 
 

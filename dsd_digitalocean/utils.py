@@ -6,16 +6,22 @@ import time
 import paramiko
 
 from django_simple_deploy.management.commands.utils import plugin_utils
+from django_simple_deploy.management.commands.utils.plugin_utils import dsd_config
 
 
-def run_server_cmd_ssh(cmd, timeout=10, show_output=True):
+def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
     """Run a command on the server, through an SSH connection.
 
     Returns:
         Tuple of Str: (stdout, stderr)
     """
-    plugin_utils.write_output("Running server command over SSH...")
-    plugin_utils.write_output(f"  command: {cmd}")
+    # If skip_logging is not explicitly set, set it to False.
+    # This matches the default in plugin_utils.write_output().
+    if skip_logging is None:
+        skip_logging = False
+
+    plugin_utils.write_output("Running server command over SSH...", skip_logging=skip_logging)
+    plugin_utils.write_output(f"  command: {cmd}", skip_logging=skip_logging)
 
     # Get client.
     client = paramiko.SSHClient()
@@ -38,9 +44,9 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True):
 
     # Show stdout and stderr, unless suppressed.
     if stdout and show_output:
-        plugin_utils.write_output(stdout)
+        plugin_utils.write_output(stdout, skip_logging=skip_logging)
     if stderr and show_output:
-        plugin_utils.write_output(stderr)
+        plugin_utils.write_output(stderr, skip_logging=skip_logging)
 
     # Return both stdout and stderr.
     return stdout, stderr
@@ -106,4 +112,30 @@ def check_server_available(delay=10, timeout=300):
 
     plugin_utils.write_output("Server did not respond.")
     return False
+
+def add_server_user():
+    """Add a non-root user.
+
+    Only if current user is root.
+
+    Returns:
+        None
+    """
+    username = os.environ.get("DSD_HOST_USERNAME")
+    if (username != "root") or dsd_config.unit_testing:
+        return
+
+    plugin_utils.write_output("Adding non-root user...")
+    django_username = "django_user"
+
+    cmd = f"useradd -m {django_username}"
+    run_server_cmd_ssh(cmd)
+
+    password = os.environ.get("DSD_HOST_PW")
+    cmd = f'echo "{django_username}:{password}" | chpasswd'
+
+    run_server_cmd_ssh(cmd, skip_logging=True)
+
+
+
 
