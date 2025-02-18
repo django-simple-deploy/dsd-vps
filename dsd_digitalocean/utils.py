@@ -87,7 +87,7 @@ def set_server_username():
         plugin_utils.write_output("  Using root for now...")
     else:
         # Default username works, we're done here.
-        plugin_utils.write_output(f"  username: {username}")
+        plugin_utils.write_output(f"  username: {dsd_config.server_username}")
         return
 
     add_server_user()
