@@ -120,7 +120,7 @@ def reboot_server():
         DSDCommandError: If the server is unavailable after rebooting.
     """
     plugin_utils.write_output("  Rebooting...")
-    cmd = "sudo shutdown -r now"
+    cmd = "sudo systemctl reboot"
     stdout, stderr = run_server_cmd_ssh(cmd)
 
     # Pause to let shutdown begin; polling too soon shows server available because
