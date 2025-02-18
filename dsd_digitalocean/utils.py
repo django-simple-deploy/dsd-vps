@@ -2,6 +2,7 @@
 
 import os
 import time
+from pathlib import Path
 
 import paramiko
 
@@ -209,3 +210,26 @@ def install_python():
     plugin_utils.write_output("Installing Python...")
     cmd = f"/home/{dsd_config.server_username}/.local/bin/uv python install 3.12"
     run_server_cmd_ssh(cmd)
+
+def configure_git(templates_path):
+    """Configure Git for pushing project to server."""
+    plugin_utils.write_output("Setting up Git project on server...")
+    cmd = f"git init --bare /home/{dsd_config.server_username}/{dsd_config.local_project_name}.git"
+    run_server_cmd_ssh(cmd)
+
+    # Set default branch to main.
+    plugin_utils.write_output("  Setting default branch to main.")
+    cmd = "git config --global init.defaultBranch main"
+    run_server_cmd_ssh(cmd)
+
+    # Write post-receive hook.
+    template_path = templates_path / "post-receive"
+    project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
+    context = {"project_path": project_path.as_posix()}
+    post_receive_string = plugin_utils.get_template_string(template_path, context)
+
+    post_receive_path = Path(f"{project_path}.git") / "hooks" / "post-receive"
+    cmd = f'echo "{post_receive_string}" > {post_receive_path.as_posix()}'
+    run_server_cmd_ssh(cmd)
+
+    # Make hook executable.

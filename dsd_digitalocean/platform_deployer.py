@@ -92,7 +92,8 @@ class PlatformDeployer:
         # Update server.
         # Run a read-only command through SSH.
         self._connect_server()
-        self._update_server()
+        # DEV: Disable during development.
+        #self._update_server()
         self._setup_server()
         
 
@@ -147,10 +148,11 @@ class PlatformDeployer:
         Roughly follows a standard Ubuntu server setup guide, such as:
         - https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu
         """
-        # do_utils.add_server_user()
         # do_utils.add_firewall()
-        do_utils.install_uv()
-        do_utils.install_python()
+        # DEV: Disable during development.
+        # do_utils.install_uv()
+        # do_utils.install_python()
+        do_utils.configure_git(self.templates_path)
 
 
 

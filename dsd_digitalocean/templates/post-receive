@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Check out the files.
+git --work-tree={{ project_path }} --git-dir={{ project_path }}.git/hooks/post-receve
