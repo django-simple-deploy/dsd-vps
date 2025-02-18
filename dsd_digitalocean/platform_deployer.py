@@ -149,7 +149,7 @@ class PlatformDeployer:
         """
         # do_utils.add_server_user()
         # do_utils.add_firewall()
-        pass
+        do_utils.install_uv()
 
 
 

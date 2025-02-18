@@ -198,3 +198,8 @@ def add_server_user():
         msg = "Could not connect with new user."
         raise DSDCommandError(msg)
 
+def install_uv():
+    """Install uv on the server."""
+    plugin_utils.write_output("Installing uv...")
+    cmd = "curl -LsSf https://astral.sh/uv/install.sh | sh"
+    run_server_cmd_ssh(cmd)
