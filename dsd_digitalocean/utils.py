@@ -84,6 +84,7 @@ def set_server_username():
     except paramiko.ssh_exception.AuthenticationException:
         # Default non-root user doesn't exist.
         dsd_config.server_username = "root"
+        plugin_utils.write_output("  Using root for now...")
     else:
         # Default username works, we're done here.
         plugin_utils.write_output(f"  username: {username}")
@@ -185,7 +186,7 @@ def add_server_user():
 
     # Modify /etc/sudoers.d to allow scripted use of sudo commands.
     plugin_utils.write_output("  Modifying /etc/sudoers.d.")
-    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD: /usr/bin/apt-get" | sudo tee /etc/sudoers.d/{django_username}'
+    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/systemctl reboot" | sudo tee /etc/sudoers.d/{django_username}'
     run_server_cmd_ssh(cmd)
 
     # Use the new user from this point forward.
