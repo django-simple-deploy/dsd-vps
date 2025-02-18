@@ -233,3 +233,6 @@ def configure_git(templates_path):
     run_server_cmd_ssh(cmd)
 
     # Make hook executable.
+    plugin_utils.write_output("  Making hook executable...")
+    cmd = f"chmod +x {post_receive_path.as_posix()} "
+    run_server_cmd_ssh(cmd)
