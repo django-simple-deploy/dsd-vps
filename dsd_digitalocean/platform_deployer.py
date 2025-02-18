@@ -150,6 +150,7 @@ class PlatformDeployer:
         # do_utils.add_server_user()
         # do_utils.add_firewall()
         do_utils.install_uv()
+        do_utils.install_python()
 
 
 

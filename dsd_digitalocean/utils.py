@@ -203,3 +203,9 @@ def install_uv():
     plugin_utils.write_output("Installing uv...")
     cmd = "curl -LsSf https://astral.sh/uv/install.sh | sh"
     run_server_cmd_ssh(cmd)
+
+def install_python():
+    """Install Python on the server."""
+    plugin_utils.write_output("Installing Python...")
+    cmd = f"/home/{dsd_config.server_username}/.local/bin/uv python install 3.12"
+    run_server_cmd_ssh(cmd)
