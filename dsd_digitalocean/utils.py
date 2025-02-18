@@ -183,6 +183,11 @@ def add_server_user():
     cmd = f"usermod -aG sudo {django_username}"
     run_server_cmd_ssh(cmd)
 
+    # Modify /etc/sudoers.d to allow scripted use of sudo commands.
+    plugin_utils.write_output("  Modifying /etc/sudoers.d.")
+    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD: /usr/bin/apt-get" | sudo tee /etc/sudoers.d/{django_username}'
+    run_server_cmd_ssh(cmd)
+
     # Use the new user from this point forward.
     dsd_config.server_username = django_username
 
