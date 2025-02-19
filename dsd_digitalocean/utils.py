@@ -213,7 +213,10 @@ def install_python():
 
 def configure_git(templates_path):
     """Configure Git for pushing project to server."""
-    plugin_utils.write_output("Setting up Git project on server...")
+
+    # --- Server configuration ---
+
+    plugin_utils.write_output("Initializing Git project on server...")
     cmd = f"git init --bare /home/{dsd_config.server_username}/{dsd_config.local_project_name}.git"
     run_server_cmd_ssh(cmd)
 
@@ -236,3 +239,13 @@ def configure_git(templates_path):
     plugin_utils.write_output("  Making hook executable...")
     cmd = f"chmod +x {post_receive_path.as_posix()} "
     run_server_cmd_ssh(cmd)
+
+    # --- Local configuration ---
+
+    plugin_utils.write_output("  Adding remote to local Git project.")
+    cmd = f"git remote add do_server '{dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{dsd_config.local_project_name}.git'"
+    plugin_utils.run_quick_command(cmd)
+
+    plugin_utils.write_output("  Pushing project code to server.")
+    cmd = f"git push --set-upstream do_server main"
+    plugin_utils.run_quick_command(cmd)
