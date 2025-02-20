@@ -215,8 +215,19 @@ def configure_git(templates_path):
     """Configure Git for pushing project to server."""
 
     # --- Server configuration ---
-
     plugin_utils.write_output("Initializing Git project on server...")
+
+    template_path = templates_path / "post-receive"
+    project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
+
+    # Make a project directory.
+    cmd = f"mkdir -p {project_path}"
+    run_server_cmd_ssh(cmd)
+
+    cmd = f"chown -R {dsd_config.server_username}:{dsd_config.server_username} {project_path}"
+    run_server_cmd_ssh(cmd)
+
+    # Make a bare git repository.
     cmd = f"git init --bare /home/{dsd_config.server_username}/{dsd_config.local_project_name}.git"
     run_server_cmd_ssh(cmd)
 
@@ -226,9 +237,9 @@ def configure_git(templates_path):
     run_server_cmd_ssh(cmd)
 
     # Write post-receive hook.
-    template_path = templates_path / "post-receive"
-    project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
-    context = {"project_path": project_path.as_posix()}
+    context = {
+        "project_path": project_path.as_posix(),
+    }
     post_receive_string = plugin_utils.get_template_string(template_path, context)
 
     post_receive_path = Path(f"{project_path}.git") / "hooks" / "post-receive"
