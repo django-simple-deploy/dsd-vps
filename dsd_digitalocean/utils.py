@@ -64,6 +64,9 @@ def configure_firewall():
     cmd = "sudo ufw --force enable"
     run_server_cmd_ssh(cmd)
 
+    cmd = "sudo ufw allow 8000"
+    run_server_cmd_ssh(cmd)
+
 def set_server_username():
     """Sets dsd_config.server_username, for logging into the server.
 
