@@ -258,5 +258,6 @@ def configure_git(templates_path):
     plugin_utils.run_quick_command(cmd)
 
     plugin_utils.write_output("  Pushing project code to server.")
-    cmd = f"git push --set-upstream do_server main"
+    cmd = f"git push do_server main"
+    breakpoint()
     plugin_utils.run_quick_command(cmd)
