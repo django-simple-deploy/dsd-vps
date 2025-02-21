@@ -257,6 +257,9 @@ def configure_git(templates_path):
     cmd = f"git remote add do_server '{dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{dsd_config.local_project_name}.git'"
     plugin_utils.run_quick_command(cmd)
 
+
+def push_project():
+    """Push the project to the server."""
     plugin_utils.write_output("  Pushing project code to server.")
     cmd = f"git push do_server main"
     breakpoint()
