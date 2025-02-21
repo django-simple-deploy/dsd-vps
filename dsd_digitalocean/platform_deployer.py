@@ -93,7 +93,7 @@ class PlatformDeployer:
         # Run a read-only command through SSH.
         self._connect_server()
         # DEV: Disable during development.
-        #self._update_server()
+        self._update_server()
         self._setup_server()
         
 
@@ -121,6 +121,7 @@ class PlatformDeployer:
     def _connect_server(self):
         """Make sure we can connect to the server, with an appropriate username."""
         do_utils.set_server_username()
+        do_utils.configure_firewall()
 
 
     def _update_server(self):
@@ -148,7 +149,6 @@ class PlatformDeployer:
         Roughly follows a standard Ubuntu server setup guide, such as:
         - https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu
         """
-        # do_utils.add_firewall()
         # DEV: Disable during development.
         # do_utils.install_uv()
         # do_utils.install_python()

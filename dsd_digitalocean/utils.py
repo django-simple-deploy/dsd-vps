@@ -22,7 +22,10 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
         skip_logging = False
 
     plugin_utils.write_output("Running server command over SSH...", skip_logging=skip_logging)
-    plugin_utils.write_output(f"  command: {cmd}", skip_logging=skip_logging)
+    if show_output:
+        plugin_utils.write_output(f"  command: {cmd}", skip_logging=skip_logging)
+    else:
+        plugin_utils.write_output("  (command not shown)", skip_logging=skip_logging)
 
     # Get client.
     client = paramiko.SSHClient()
@@ -51,6 +54,15 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
 
     # Return both stdout and stderr.
     return stdout, stderr
+
+def configure_firewall():
+    """Configure the ufw firewall."""
+    plugin_utils.write_output("Configuring firewall...")
+    cmd = "sudo ufw allow OpenSSH"
+    run_server_cmd_ssh(cmd)
+
+    cmd = "sudo ufw --force enable"
+    run_server_cmd_ssh(cmd)
 
 def set_server_username():
     """Sets dsd_config.server_username, for logging into the server.
@@ -187,7 +199,7 @@ def add_server_user():
 
     # Modify /etc/sudoers.d to allow scripted use of sudo commands.
     plugin_utils.write_output("  Modifying /etc/sudoers.d.")
-    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/systemctl reboot" | sudo tee /etc/sudoers.d/{django_username}'
+    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/systemctl reboot, /usr/sbin/ufw" | sudo tee /etc/sudoers.d/{django_username}'
     run_server_cmd_ssh(cmd)
 
     # Use the new user from this point forward.
