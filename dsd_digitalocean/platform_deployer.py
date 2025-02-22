@@ -87,15 +87,17 @@ class PlatformDeployer:
         self._validate_platform()
         self._prep_automate_all()
 
-        # Configure project for deployment to Digital Ocean.
 
-        # Update server.
-        # Run a read-only command through SSH.
-        self._connect_server()
-        # DEV: Disable during development.
-        self._update_server()
-        self._setup_server()
+        # Configure server.
+        # self._connect_server()
+        # self._update_server()
+        # self._setup_server()
         
+        # Configure project for deployment to Digital Ocean.
+        self._add_requirements()
+        self._modify_settings()
+
+
 
         self._conclude_automate_all()
         self._show_success_message()
@@ -150,15 +152,24 @@ class PlatformDeployer:
         - https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu
         """
         # DEV: Disable during development.
-        # do_utils.install_uv()
-        # do_utils.install_python()
+        do_utils.install_uv()
+        do_utils.install_python()
         do_utils.configure_git(self.templates_path)
 
+    def _add_requirements(self):
+        """Add server-specific requirements."""
+        plugin_utils.write_output("  Adding server-specific requirements...")
+        requirements = ["gunicorn"]
+        plugin_utils.add_packages(requirements)
 
-
-
-
-
+    def _modify_settings(self):
+        # Add do-specific settings.
+        template_path = self.templates_path / "settings.py"
+        context = {
+            "deployed_project_name": dsd_config.local_project_name,
+            "ip_addr": os.environ.get("DSD_HOST_IPADDR"),
+        }
+        plugin_utils.modify_settings_file(template_path, context)
 
 
     def _conclude_automate_all(self):
@@ -177,7 +188,7 @@ class PlatformDeployer:
         plugin_utils.write_output("  Deploying to Digital Ocean...")
 
         # Should set self.deployed_url, which will be reported in the success message.
-        pass
+        self.deployed_url = "<placeholder_url>"
 
     def _show_success_message(self):
         """After a successful run, show a message about what to do next.

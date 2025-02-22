@@ -279,3 +279,12 @@ def push_project():
     cmd = f"git push do_server main"
     breakpoint()
     plugin_utils.run_quick_command(cmd)
+
+
+def set_on_do(self):
+        """Set the ON_DIGITALOCEAN env var."""
+        # DEV: This may not persist where it's needed?
+        #   Write a .env file and export it when activating venv?
+        plugin_utils.write_output("  Setting ON_DIGITALOCEAN env var.")
+        cmd = "export ON_DIGITALOCEAN=1"
+        do_utils.run_server_cmd_ssh(cmd)
