@@ -89,13 +89,14 @@ class PlatformDeployer:
 
 
         # Configure server.
-        # self._connect_server()
+        self._connect_server()
         # self._update_server()
-        # self._setup_server()
+        self._setup_server()
         
         # Configure project for deployment to Digital Ocean.
         self._add_requirements()
         self._modify_settings()
+        self._add_serve_project_file()
 
 
 
@@ -171,6 +172,33 @@ class PlatformDeployer:
         }
         plugin_utils.modify_settings_file(template_path, context)
 
+    def _add_serve_project_file(self):
+        # Add a bash script to start server process after code pushes.
+        # template_path = self.templates_path / "dockerfile_example"
+        # context = {
+        #     "django_project_name": dsd_config.local_project_name,
+        # }
+        # contents = plugin_utils.get_template_string(template_path, context)
+
+        # # Write file to project.
+        # path = dsd_config.project_root / "Dockerfile"
+        # plugin_utils.add_file(path, contents)
+
+
+        template_path = self.templates_path / "serve_project.sh"
+        project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
+        context = {
+            "project_path": project_path,
+            "uv_path": f"/home/{dsd_config.server_username}/.local/bin/uv",
+        }
+        contents = plugin_utils.get_template_string(template_path, context)
+
+        # Write file to project.
+        path = dsd_config.project_root / "serve_project.sh"
+        plugin_utils.add_file(path, contents)
+
+
+
 
     def _conclude_automate_all(self):
         """Finish automating the push to Digital Ocean.
@@ -186,6 +214,15 @@ class PlatformDeployer:
 
         # Push project.
         plugin_utils.write_output("  Deploying to Digital Ocean...")
+
+        do_utils.push_project()
+        # Make serve script executable.
+        project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
+        serve_script_path = f"{project_path}/serve_project.sh"
+        cmd = f"chmod +x {serve_script_path}"
+        do_utils.run_server_cmd_ssh(cmd)
+
+        do_utils.serve_project()
 
         # Should set self.deployed_url, which will be reported in the success message.
         self.deployed_url = "<placeholder_url>"
