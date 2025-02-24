@@ -15,4 +15,4 @@ export ON_DIGITALOCEAN=1
 {{ project_path }}/.venv/bin/python manage.py collectstatic --noinput
 
 # Serve project.
-{{ project_path }}/.venv/bin/gunicorn --bind 0.0.0.0:8000 blog.wsgi &
+nohup {{ project_path }}/.venv/bin/gunicorn --bind 0.0.0.0:8000 blog.wsgi > gunicorn.log f2>&1

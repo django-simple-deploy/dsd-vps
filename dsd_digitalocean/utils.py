@@ -297,34 +297,8 @@ def serve_project():
     - start server process
     - ensure available
     """
-    # Write a bash script to do all this, and call that script?
-    # Commit this script to local project, not just on server.
-
-    # Copy script to server.
-    # template_path = templates_path / "serve_project.sh"
-    # project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
-    # context = {
-    #     "project_path": project_path,
-    #     "uv_path": f"/home/{dsd_config.server_username}/.local/bin/uv",
-    # }
-    # serve_script_string = plugin_utils.get_template_string(template_path, context)
-
-    # import tempfile
-    # with tempfile.NamedTemporaryFile() as tmp:
-    #     path = Path(tmp.name)
-    #     path.write_text(serve_script_string)
-    #     cmd = f"scp {path.as_posix()} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{project_path}/serve_projec.sh"
-    #     breakpoint()
-    #     run_server_cmd_ssh(cmd)
-
-    # serve_script_path = f"{project_path}/serve_project.sh"
-    # cmd = f"chmod +x {serve_script_path}"
-    # run_server_cmd_ssh(cmd)
-
     # Run serve script.
     project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
     serve_script_path = f"{project_path}/serve_project.sh"
     cmd = f"{serve_script_path}"
-    breakpoint()
     run_server_cmd_ssh(cmd)
-

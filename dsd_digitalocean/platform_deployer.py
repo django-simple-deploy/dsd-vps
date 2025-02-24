@@ -225,7 +225,9 @@ class PlatformDeployer:
         do_utils.serve_project()
 
         # Should set self.deployed_url, which will be reported in the success message.
-        self.deployed_url = "<placeholder_url>"
+        self.deployed_url = f"http://{os.environ.get('DSD_HOST_IPADDR')}:8000/"
+        cmd = f"open -a {self.deployed_url}"
+        plugin_utils.run_quick_command(cmd)
 
     def _show_success_message(self):
         """After a successful run, show a message about what to do next.
