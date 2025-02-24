@@ -276,7 +276,8 @@ def configure_git(templates_path):
 def push_project():
     """Push the project to the server."""
     plugin_utils.write_output("  Pushing project code to server.")
-    cmd = f"git push do_server main"
+    # DEV: --force during development
+    cmd = f"git push do_server main --force"
     plugin_utils.run_quick_command(cmd)
 
 
