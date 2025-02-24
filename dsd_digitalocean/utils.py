@@ -202,7 +202,7 @@ def add_server_user():
 
     # Modify /etc/sudoers.d to allow scripted use of sudo commands.
     plugin_utils.write_output("  Modifying /etc/sudoers.d.")
-    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/systemctl reboot, /usr/sbin/ufw" | sudo tee /etc/sudoers.d/{django_username}'
+    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/systemctl reboot, /usr/bin/systemctl start, /usr/bin/systemctl enable, /usr/sbin/ufw" | sudo tee /etc/sudoers.d/{django_username}'
     run_server_cmd_ssh(cmd)
 
     # Use the new user from this point forward.

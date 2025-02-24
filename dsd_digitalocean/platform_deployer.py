@@ -55,6 +55,7 @@ Add a set of requirements:
 import sys, os, re, json
 import time
 from pathlib import Path
+import tempfile
 
 from django.utils.safestring import mark_safe
 
@@ -97,6 +98,7 @@ class PlatformDeployer:
         self._add_requirements()
         self._modify_settings()
         self._add_serve_project_file()
+        self._configure_gunicorn()
 
 
 
@@ -196,6 +198,33 @@ class PlatformDeployer:
         # Write file to project.
         path = dsd_config.project_root / "serve_project.sh"
         plugin_utils.add_file(path, contents)
+
+    def _configure_gunicorn(self):
+        """Configure gunicorn to run as a system service.
+
+        DEV: This should probably go somewhere else.
+        """
+        plugin_utils.write_output("  Configuring gunicorn to run as a service.")
+
+        # gunicorn.socket
+        template_path = self.templates_path / "gunicorn.socket"
+        cmd = f"scp {template_path} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/etc/systemd/system/gunicorn.socket"
+        plugin_utils.write_output(cmd)
+        plugin_utils.run_quick_command(cmd)
+
+        # gunicorn.service
+        template_path = self.templates_path / "gunicorn.service"
+        context = {
+            "project_name": dsd_config.local_project_name,
+        }
+        contents = plugin_utils.get_template_string(template_path, context)
+        with tempfile.NamedTemporaryFile() as tmp:
+            breakpoint()
+            path = Path(tmp.name)
+            path.write_text(contents)
+            cmd = f"scp {path.as_posix()} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/etc/systemd/system/gunicorn.service"
+            plugin_utils.write_output(cmd)
+            plugin_utils.run_quick_command(cmd)
 
 
 
