@@ -206,11 +206,15 @@ class PlatformDeployer:
         """
         plugin_utils.write_output("  Configuring gunicorn to run as a service.")
 
-        # gunicorn.socket
+        # Write gunicorn.socket to accessible location, then move it to appropriate location.
         template_path = self.templates_path / "gunicorn.socket"
-        cmd = f"scp {template_path} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/etc/systemd/system/gunicorn.socket"
+        cmd = f"scp {template_path} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/home/{dsd_config.server_username}/gunicorn.socket"
         plugin_utils.write_output(cmd)
         plugin_utils.run_quick_command(cmd)
+
+        cmd = f"sudo mv /home/{dsd_config.server_username}/gunicorn.socket /etc/systemd/system/gunicorn.socket"
+        do_utils.run_server_cmd_ssh(cmd)
+        breakpoint()
 
         # gunicorn.service
         template_path = self.templates_path / "gunicorn.service"
