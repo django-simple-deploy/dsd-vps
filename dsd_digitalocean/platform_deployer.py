@@ -218,7 +218,10 @@ class PlatformDeployer:
 
         # gunicorn.service
         template_path = self.templates_path / "gunicorn.service"
+        project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
         context = {
+            "server_username": dsd_config.server_username,
+            "project_path": project_path,
             "project_name": dsd_config.local_project_name,
         }
         contents = plugin_utils.get_template_string(template_path, context)
@@ -226,9 +229,17 @@ class PlatformDeployer:
             breakpoint()
             path = Path(tmp.name)
             path.write_text(contents)
-            cmd = f"scp {path.as_posix()} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/etc/systemd/system/gunicorn.service"
+
+            # cmd = f"scp {path.as_posix()} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/etc/systemd/system/gunicorn.service"
+            # plugin_utils.write_output(cmd)
+            # plugin_utils.run_quick_command(cmd)
+
+            cmd = f"scp {path} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/home/{dsd_config.server_username}/gunicorn.service"
             plugin_utils.write_output(cmd)
             plugin_utils.run_quick_command(cmd)
+
+            cmd = f"sudo mv /home/{dsd_config.server_username}/gunicorn.service /etc/systemd/system/gunicorn.service"
+            do_utils.run_server_cmd_ssh(cmd)
 
 
 
