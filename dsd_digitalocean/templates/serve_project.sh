@@ -17,5 +17,5 @@ export ON_DIGITALOCEAN=1
 # Serve project.
 # nohup {{ project_path }}/.venv/bin/gunicorn --bind 0.0.0.0:8000 blog.wsgi > gunicorn.log f2>&1
 
-sudo systemctl start gunicorn.socket
-sudo systemctl enable gunicorn.socket
+sudo /usr/bin/systemctl start gunicorn.socket
+sudo /usr/bin/systemctl enable gunicorn.socket

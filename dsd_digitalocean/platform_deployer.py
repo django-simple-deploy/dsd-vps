@@ -208,13 +208,16 @@ class PlatformDeployer:
 
         # Write gunicorn.socket to accessible location, then move it to appropriate location.
         template_path = self.templates_path / "gunicorn.socket"
-        cmd = f"scp {template_path} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/home/{dsd_config.server_username}/gunicorn.socket"
-        plugin_utils.write_output(cmd)
-        plugin_utils.run_quick_command(cmd)
+        # cmd = f"scp {template_path} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/home/{dsd_config.server_username}/gunicorn.socket"
+        # plugin_utils.write_output(cmd)
+        # plugin_utils.run_quick_command(cmd)
+
+        path_local = self.templates_path / "gunicorn.socket"
+        path_remote = f"/home/{dsd_config.server_username}/gunicorn.socket"
+        do_utils.copy_to_server(path_local, path_remote)
 
         cmd = f"sudo mv /home/{dsd_config.server_username}/gunicorn.socket /etc/systemd/system/gunicorn.socket"
         do_utils.run_server_cmd_ssh(cmd)
-        breakpoint()
 
         # gunicorn.service
         template_path = self.templates_path / "gunicorn.service"
@@ -226,17 +229,21 @@ class PlatformDeployer:
         }
         contents = plugin_utils.get_template_string(template_path, context)
         with tempfile.NamedTemporaryFile() as tmp:
-            breakpoint()
-            path = Path(tmp.name)
-            path.write_text(contents)
+            path_local = Path(tmp.name)
+            path_local.write_text(contents)
 
             # cmd = f"scp {path.as_posix()} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/etc/systemd/system/gunicorn.service"
             # plugin_utils.write_output(cmd)
             # plugin_utils.run_quick_command(cmd)
 
-            cmd = f"scp {path} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/home/{dsd_config.server_username}/gunicorn.service"
-            plugin_utils.write_output(cmd)
-            plugin_utils.run_quick_command(cmd)
+            # cmd = f"scp {path} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/home/{dsd_config.server_username}/gunicorn.service"
+            # plugin_utils.write_output(cmd)
+            # plugin_utils.run_quick_command(cmd)
+
+            path_remote = f"/home/{dsd_config.server_username}/gunicorn.service"
+            do_utils.copy_to_server(path_local, path_remote)
+
+
 
             cmd = f"sudo mv /home/{dsd_config.server_username}/gunicorn.service /etc/systemd/system/gunicorn.service"
             do_utils.run_server_cmd_ssh(cmd)

@@ -55,6 +55,40 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
     # Return both stdout and stderr.
     return stdout, stderr
 
+def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
+    """Copy a local file to the server.
+
+    This should only be for system files. All project files should be part of the
+    repository, and pushed through Git.
+    """
+    # If skip_logging is not explicitly set, set it to False.
+    # This matches the default in plugin_utils.write_output().
+    if skip_logging is None:
+        skip_logging = False
+
+    plugin_utils.write_output(f"Copying {path_local.as_posix()} to server.", skip_logging=skip_logging)
+
+    # Get client.
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    # Copy file, and close connection.
+    try:
+        client.connect(
+            hostname = os.environ.get("DSD_HOST_IPADDR"),
+            username = dsd_config.server_username,
+            password = os.environ.get("DSD_HOST_PW"),
+            timeout = timeout
+        )
+        sftp = client.open_sftp()
+        sftp.put(path_local, path_remote)
+        sftp.close()
+    finally:
+        client.close()
+
+
+
+
 def configure_firewall():
     """Configure the ufw firewall."""
     plugin_utils.write_output("Configuring firewall...")
@@ -202,7 +236,7 @@ def add_server_user():
 
     # Modify /etc/sudoers.d to allow scripted use of sudo commands.
     plugin_utils.write_output("  Modifying /etc/sudoers.d.")
-    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/mv, /usr/bin/systemctl reboot, /usr/bin/systemctl start, /usr/bin/systemctl enable, /usr/sbin/ufw" | sudo tee /etc/sudoers.d/{django_username}'
+    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/mv, /usr/bin/systemctl reboot, /usr/bin/systemctl start gunicorn, /usr/bin/systemctl enable gunicorn, /usr/sbin/ufw" | sudo tee /etc/sudoers.d/{django_username}'
     run_server_cmd_ssh(cmd)
 
     # Use the new user from this point forward.
