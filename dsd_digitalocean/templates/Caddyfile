@@ -3,5 +3,9 @@
 }
 
 {{ server_ip_address }} {
-    respond "ok"
+    encode zstd gzip
+
+    handle {
+        reverse_proxy localhost:8000
+    }
 }

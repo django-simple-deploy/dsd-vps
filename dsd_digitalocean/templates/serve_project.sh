@@ -7,7 +7,7 @@ source .venv/bin/activate
 {{ uv_path }} pip install -r requirements.txt
 
 # Set env vars.
-export DEBUG=FALSE
+export DEBUG=TRUE
 export ON_DIGITALOCEAN=1
 
 # Migrate, and run collectstatic.
