@@ -158,6 +158,7 @@ class PlatformDeployer:
         do_utils.install_uv()
         do_utils.install_python()
         do_utils.configure_git(self.templates_path)
+        do_utils.install_caddy()
 
     def _add_requirements(self):
         """Add server-specific requirements."""
@@ -198,6 +199,31 @@ class PlatformDeployer:
         # Write file to project.
         path = dsd_config.project_root / "serve_project.sh"
         plugin_utils.add_file(path, contents)
+
+    def _add_caddyfile(self):
+        """Add a Caddyfile to the project.
+
+        This configures Caddy, for serving static files.
+        """
+        template_path = self.templates_path / "Caddyfile"
+        context = {
+            "server_ip_address": os.environ.get("DSD_HOST_IPADDR")
+        }
+        contents = plugin_utils.get_template_string(template_path, context)
+
+        with tempfile.NamedTemporaryFile() as tmp:
+            path_local = Path(tmp.name)
+            path_local.write_text(contents)
+
+            path_remote = f"/home/{dsd_config.server_username}/Caddyfile"
+            do_utils.copy_to_server(path_local, path_remote)
+
+            cmd = f"sudo mv /home/{dsd_config.server_username}/Caddyfile /etc/caddy/Caddyfile"
+            do_utils.run_server_cmd_ssh(cmd)
+
+
+
+
 
     def _configure_gunicorn(self):
         """Configure gunicorn to run as a system service.

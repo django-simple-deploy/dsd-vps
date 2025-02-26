@@ -238,7 +238,7 @@ def add_server_user():
     # DEV: This can probably be copied to an accessible place, and then mv
     # to the correct location, like gunicorn.socket.
     plugin_utils.write_output("  Modifying /etc/sudoers.d.")
-    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/mv, /usr/bin/systemctl reboot, /usr/bin/systemctl start gunicorn.socket, /usr/bin/systemctl enable gunicorn.socket, /usr/sbin/ufw" | sudo tee /etc/sudoers.d/{django_username}'
+    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/mv, /usr/bin/systemctl reboot, /usr/bin/systemctl start gunicorn.socket, /usr/bin/systemctl enable gunicorn.socket, /usr/sbin/ufw, /usr/bin/gpg, /usr/bin/tee" | sudo tee /etc/sudoers.d/{django_username}'
     run_server_cmd_ssh(cmd)
 
     # Use the new user from this point forward.
@@ -307,6 +307,26 @@ def configure_git(templates_path):
     plugin_utils.write_output("  Adding remote to local Git project.")
     cmd = f"git remote add do_server '{dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{dsd_config.local_project_name}.git'"
     plugin_utils.run_quick_command(cmd)
+
+
+def install_caddy():
+    """Install Caddy, for static file serving."""
+    plugin_utils.write_output("Installing Caddy, to serve static files.")
+
+    # --- Installation ---
+    cmd = "sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl"
+    run_server_cmd_ssh(cmd)
+
+    cmd = "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg"
+    run_server_cmd_ssh(cmd)
+
+    cmd = "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list"
+    run_server_cmd_ssh(cmd)
+
+    cmd = "sudo apt-get update && sudo apt-get install caddy"
+    run_server_cmd_ssh(cmd)
+
+
 
 
 def push_project():
