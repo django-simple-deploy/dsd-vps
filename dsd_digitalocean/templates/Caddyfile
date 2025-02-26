@@ -6,6 +6,6 @@
     encode zstd gzip
 
     handle {
-        reverse_proxy localhost:8000
+        reverse_proxy unix//run/gunicorn.sock
     }
 }
