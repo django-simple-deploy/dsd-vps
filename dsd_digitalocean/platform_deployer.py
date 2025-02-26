@@ -91,7 +91,7 @@ class PlatformDeployer:
 
         # Configure server.
         self._connect_server()
-        # self._update_server()
+        self._update_server()
         self._setup_server()
         
         # Configure project for deployment to Digital Ocean.
