@@ -278,13 +278,13 @@ def configure_git(templates_path):
     cmd = f"chown -R {dsd_config.server_username}:{dsd_config.server_username} {project_path}"
     run_server_cmd_ssh(cmd)
 
-    # Make a bare git repository.
-    cmd = f"git init --bare /home/{dsd_config.server_username}/{dsd_config.local_project_name}.git"
-    run_server_cmd_ssh(cmd)
-
     # Set default branch to main.
     plugin_utils.write_output("  Setting default branch to main.")
     cmd = "git config --global init.defaultBranch main"
+    run_server_cmd_ssh(cmd)
+
+    # Make a bare git repository.
+    cmd = f"git init --bare /home/{dsd_config.server_username}/{dsd_config.local_project_name}.git"
     run_server_cmd_ssh(cmd)
 
     # Write post-receive hook.
