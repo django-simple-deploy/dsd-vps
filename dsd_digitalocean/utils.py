@@ -235,8 +235,10 @@ def add_server_user():
     run_server_cmd_ssh(cmd)
 
     # Modify /etc/sudoers.d to allow scripted use of sudo commands.
+    # DEV: This can probably be copied to an accessible place, and then mv
+    # to the correct location, like gunicorn.socket.
     plugin_utils.write_output("  Modifying /etc/sudoers.d.")
-    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/mv, /usr/bin/systemctl reboot, /usr/bin/systemctl start gunicorn, /usr/bin/systemctl enable gunicorn, /usr/sbin/ufw" | sudo tee /etc/sudoers.d/{django_username}'
+    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/mv, /usr/bin/systemctl reboot, /usr/bin/systemctl start gunicorn.socket, /usr/bin/systemctl enable gunicorn.socket, /usr/sbin/ufw" | sudo tee /etc/sudoers.d/{django_username}'
     run_server_cmd_ssh(cmd)
 
     # Use the new user from this point forward.
@@ -312,6 +314,7 @@ def push_project():
     plugin_utils.write_output("  Pushing project code to server.")
     # DEV: --force during development
     cmd = f"git push do_server main --force"
+    breakpoint()
     plugin_utils.run_quick_command(cmd)
 
 
