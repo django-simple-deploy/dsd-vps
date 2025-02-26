@@ -338,7 +338,6 @@ def push_project():
     plugin_utils.write_output("  Pushing project code to server.")
     # DEV: --force during development
     cmd = f"git push do_server main --force"
-    breakpoint()
     plugin_utils.run_quick_command(cmd)
 
 
