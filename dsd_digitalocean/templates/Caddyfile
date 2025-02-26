@@ -1,0 +1,7 @@
+{
+    debug
+}
+
+{{ server_ip_address }} {
+    respond "ok"
+}
