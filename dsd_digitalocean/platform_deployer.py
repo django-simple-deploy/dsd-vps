@@ -98,6 +98,8 @@ class PlatformDeployer:
         self._add_requirements()
         self._modify_settings()
         self._add_serve_project_file()
+
+        self._add_caddyfile()
         self._configure_gunicorn()
 
 
