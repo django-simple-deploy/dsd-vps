@@ -242,7 +242,7 @@ def add_server_user():
     # DEV: This can probably be copied to an accessible place, and then mv
     # to the correct location, like gunicorn.socket.
     plugin_utils.write_output("  Modifying /etc/sudoers.d.")
-    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/mv, /usr/bin/systemctl reboot, /usr/bin/systemctl start gunicorn.socket, /usr/bin/systemctl enable gunicorn.socket, /usr/bin/systemctl start caddy, /usr/bin/systemctl enable caddy, /usr/sbin/ufw, /usr/bin/gpg, /usr/bin/tee" | sudo tee /etc/sudoers.d/{django_username}'
+    cmd = f'echo "{django_username} ALL=(ALL) NOPASSWD:SETENV: /usr/bin/apt-get, NOPASSWD: /usr/bin/apt-get, /usr/bin/mv, /usr/bin/systemctl daemon-reload, /usr/bin/systemctl reboot, /usr/bin/systemctl start gunicorn.socket, /usr/bin/systemctl enable gunicorn.socket, /usr/bin/systemctl start caddy, /usr/bin/systemctl enable caddy, /usr/sbin/ufw, /usr/bin/gpg, /usr/bin/tee" | sudo tee /etc/sudoers.d/{django_username}'
     run_server_cmd_ssh(cmd)
 
     # Use the new user from this point forward.

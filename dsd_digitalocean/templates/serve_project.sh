@@ -14,11 +14,21 @@ source .venv/bin/activate
 {{ project_path }}/.venv/bin/python manage.py migrate
 {{ project_path }}/.venv/bin/python manage.py collectstatic --noinput
 
-# Serve project.
-# nohup {{ project_path }}/.venv/bin/gunicorn --bind 0.0.0.0:8000 blog.wsgi > gunicorn.log f2>&1
+# Serve project. Reload service files, start gunicorn, start caddy.
+# The logic here allows this script to be run after services have been 
+# started. This is especially helpful during development work.
+sudo /usr/bin/systemctl daemon-reload
 
-sudo /usr/bin/systemctl start gunicorn.socket
 sudo /usr/bin/systemctl enable gunicorn.socket
+if systemctl is-active --quiet gunicorn.socket; then
+    sudo /usr/bin/systemctl restart gunicorn.socket
+else
+    sudo /usr/bin/systemctl start gunicorn.socket
+fi
 
 sudo /usr/bin/systemctl enable caddy
-sudo /usr/bin/systemctl start caddy
+if systemctl is-active --quiet caddy; then
+    sudo /usr/bin/systemctl restart caddy
+else
+    sudo /usr/bin/systemctl start caddy
+fi
