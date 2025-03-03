@@ -310,7 +310,12 @@ def configure_git(templates_path):
 
     plugin_utils.write_output("  Adding remote to local Git project.")
     cmd = f"git remote add do_server '{dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{dsd_config.local_project_name}.git'"
-    plugin_utils.run_quick_command(cmd)
+    output_obj = plugin_utils.run_quick_command(cmd)
+    stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    plugin_utils.write_output(stdout)
+    if stderr:
+        plugin_utils.write_output("--- Error ---")
+        plugin_utils.write_output(stderr)
 
 
 def install_caddy():
@@ -338,7 +343,12 @@ def push_project():
     plugin_utils.write_output("  Pushing project code to server.")
     # DEV: --force during development
     cmd = f"git push do_server main --force"
-    plugin_utils.run_quick_command(cmd)
+    output_obj = plugin_utils.run_quick_command(cmd)
+    stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    plugin_utils.write_output(stdout)
+    if stderr:
+        plugin_utils.write_output("--- Error ---")
+        plugin_utils.write_output(stderr)
 
 
 def set_on_do():
