@@ -7,12 +7,12 @@ if os.environ.get("ON_DIGITALOCEAN"):
     # from https://whitenoise.evans.io/en/stable/#quickstart-for-django-apps
     STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
     STATIC_URL = "/static/"
-    try:
-        STATICFILES_DIRS.append(os.path.join(BASE_DIR, "static"))
-    except NameError:
-        STATICFILES_DIRS = [
-            os.path.join(BASE_DIR, "static"),
-        ]
+    # try:
+    #     STATICFILES_DIRS.append(os.path.join(BASE_DIR, "static"))
+    # except NameError:
+    #     STATICFILES_DIRS = [
+    #         os.path.join(BASE_DIR, "static"),
+    #     ]
 
     # i = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware")
     # MIDDLEWARE.insert(i + 1, "whitenoise.middleware.WhiteNoiseMiddleware")
