@@ -1,0 +1,5 @@
+Host git-server
+    HostName {{ server_ip }}
+    User {{ server_username }}
+    IdentityFile ~/.ssh/id_rsa_git
+    IdentitiesOnly yes

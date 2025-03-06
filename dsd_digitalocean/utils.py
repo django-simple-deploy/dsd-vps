@@ -273,6 +273,46 @@ def configure_git(templates_path):
     # --- Server configuration ---
     plugin_utils.write_output("Initializing Git project on server...")
 
+    # Configure ssh keys, so push can happen without prompting for password.
+    # Generate key pair.
+    ipaddr = os.environ.get("DSD_HOST_IPADDR")
+    path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
+    if path_keyfile.exists():
+        raise DSDCommandError(f"Git ssh keyfile already exists at {path_keyfile}.")
+
+    cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
+    output_obj = plugin_utils.run_quick_command(cmd)
+    stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    plugin_utils.write_output(stdout)
+    if stderr:
+        plugin_utils.write_output("--- Error ---")
+        plugin_utils.write_output(stderr)
+
+    # Copy key to server.
+    cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
+    output_obj = plugin_utils.run_quick_command(cmd)
+    stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    plugin_utils.write_output(stdout)
+    if stderr:
+        plugin_utils.write_output("--- Error ---")
+        plugin_utils.write_output(stderr)
+
+    # Add ssh config to end of config file, if not already present.
+    template_path = templates_path / "git_ssh_config_block.txt"
+    context = {
+        "server_ip": ipaddr,
+        "server_username": dsd_config.server_username,
+    }
+    git_config_block = plugin_utils.get_template_string(template_path, context)
+    path_git_config = Path.home() / ".ssh" / "config"
+    contents_git_config = path_git_config.read_text()
+
+    if git_config_block not in contents_git_config:
+        # Add new config block to ~/.ssh/config.
+        contents = contents_git_config + "\n" + git_config_block
+        path_git_config.write_text(contents)
+
+    # Set up project on remote.
     template_path = templates_path / "post-receive"
     project_path = Path(f"/home/{dsd_config.server_username}/{dsd_config.local_project_name}")
 
@@ -310,7 +350,8 @@ def configure_git(templates_path):
     # --- Local configuration ---
 
     plugin_utils.write_output("  Adding remote to local Git project.")
-    cmd = f"git remote add do_server '{dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{dsd_config.local_project_name}.git'"
+    # cmd = f"git remote add do_server '{dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{dsd_config.local_project_name}.git'"
+    cmd = f"git remote add do_server 'git-server:/home/{dsd_config.server_username}/{dsd_config.local_project_name}.git'"
     output_obj = plugin_utils.run_quick_command(cmd)
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)
