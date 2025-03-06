@@ -1,0 +1,11 @@
+{
+    debug
+}
+
+{{ server_ip_address }} {
+    encode zstd gzip
+
+    handle {
+        reverse_proxy unix//run/gunicorn.sock
+    }
+}

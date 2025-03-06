@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Update refs before checking out code.
+git --git-dir={{ project_path }}.git update-ref HEAD refs/heads/main
+
+# Check out code files.
+git --work-tree={{ project_path }} --git-dir={{ project_path }}.git checkout -f main
