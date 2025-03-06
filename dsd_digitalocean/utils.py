@@ -9,6 +9,7 @@ from paramiko.ssh_exception import NoValidConnectionsError
 
 from django_simple_deploy.management.commands.utils import plugin_utils
 from django_simple_deploy.management.commands.utils.plugin_utils import dsd_config
+from django_simple_deploy.management.commands.utils.command_errors import DSDCommandError
 
 
 def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
