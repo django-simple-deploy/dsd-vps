@@ -56,6 +56,7 @@ import sys, os, re, json
 import time
 from pathlib import Path
 import tempfile
+import webbrowser
 
 from django.utils.safestring import mark_safe
 
@@ -305,13 +306,8 @@ class PlatformDeployer:
 
         # Should set self.deployed_url, which will be reported in the success message.
         self.deployed_url = f"http://{os.environ.get('DSD_HOST_IPADDR')}/"
-        cmd = f"open -a 'Google Chrome' {self.deployed_url}"
-        output_obj = plugin_utils.run_quick_command(cmd)
-        stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
-        plugin_utils.write_output(stdout)
-        if stderr:
-            plugin_utils.write_output("--- Error ---")
-            plugin_utils.write_output(stderr)
+        webbrowser.open(self.deployed_url)
+
 
     def _show_success_message(self):
         """After a successful run, show a message about what to do next.
