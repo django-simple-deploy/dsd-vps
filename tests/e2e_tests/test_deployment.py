@@ -26,9 +26,9 @@ def test_deployment(tmp_project, cli_options, request):
     """Test the full, live deployment process to Digital Ocean."""
 
     # Cache the platform name for teardown work.
-    request.config.cache.set("platform", "dsd_digitalocean")
+    request.config.cache.set("platform", "dsd_vps")
 
-    print("\nTesting deployment to Digital Ocean using the following options:")
+    print("\nTesting deployment to VPS using the following options:")
     print(cli_options.__dict__)
 
     python_cmd = it_utils.get_python_exe(tmp_project)

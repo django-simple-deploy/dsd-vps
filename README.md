@@ -1,15 +1,15 @@
-# dsd-digitalocean
+# dsd-vps
 
-A plugin for deploying Django projects to Digital Ocean, using django-simple-deploy.
+A plugin for deploying Django projects to any VPS provider, using django-simple-deploy.
 
 Quick Start
 ---
 
-To deploy your project to Digital Ocean, you'll need to ...
+To deploy your project to a VPS, you'll need to ...
 
 ## Prerequisites
 
-Deployment to Digital Ocean requires the following:
+Deployment to a VPS requires the following:
 
 - You must be using Git to track your project.
 - You need to be tracking your dependencies with a `requirements.txt` file, or be using Poetry or Pipenv.
@@ -17,15 +17,15 @@ Deployment to Digital Ocean requires the following:
 
 ## Configuration-only deployment (NOT SUPPORTED YET)
 
-First, install `dsd-digitalocean` and add `django_simple_deploy` to `INSTALLED_APPS` in *settings.py*:
+First, install `dsd-vps` and add `django_simple_deploy` to `INSTALLED_APPS` in *settings.py*:
 
 ```sh
-$ pip install dsd-digitalocean
+$ pip install dsd-vps
 # Add "django_simple_deploy" to INSTALLED_APPS in settings.py.
 $ git commit -am "Added django_simple_deploy to INSTALLED_APPS."
 ```
 
-When you install `dsd-digitalocean`, it will install `django-simple-deploy` as a dependency.
+When you install `dsd-vps`, it will install `django-simple-deploy` as a dependency.
 
 Now run the `deploy` command:
 
@@ -45,7 +45,7 @@ This is experimental, and you should review the codebase before running this ear
 - Set two env vars:
     - `$ export DSD_HOST_IPADDR=<droplet-ip-address>`
     - `$ export DSD_HOST_PW=<droplet-pw>`
-- Install `dsd-digitalocean`.
+- Install `dsd-vps`.
     - This will be changed to `dsd-vps` shortly, as it should work for all VPS hosting platforms.
     - This plugin is not yet available on PyPI; I'm currently using an editable install of the repo.
 - Add `django_simple_deploy` to `INSTALLED_APPS`.
@@ -56,4 +56,3 @@ The `deploy` command will add a new user named `django_user` to the droplet, wit
 It will add a local ssh key pair for Git, modifying `~/.ssh/config`. The key will be stored at `~/.ssh/id_rsa_git`.
 
 The project will be served over http, which means the browser will probably flag it as insecure.
-

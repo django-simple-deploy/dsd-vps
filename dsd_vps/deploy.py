@@ -1,4 +1,4 @@
-"""Manages all {PlatformName}-specific aspects of the deployment process.
+"""Manages all VPS-specific aspects of the deployment process.
 
 Notes:
 - ...
@@ -6,7 +6,7 @@ Notes:
 
 import django_simple_deploy
 
-from dsd_digitalocean.platform_deployer import PlatformDeployer
+from dsd_vps.platform_deployer import PlatformDeployer
 from .plugin_config import PluginConfig
 
 

@@ -1,11 +1,11 @@
-"""Manages all Digital Ocean-specific aspects of the deployment process.
+"""Manages all VPS-specific aspects of the deployment process.
 
 VPS notes:
 
 - All actions taken against the server should be idempotent if at all possible. If an
   action is not idempotent, that should be noted.
 
-DO notes:
+VPS notes:
 
 - 
 

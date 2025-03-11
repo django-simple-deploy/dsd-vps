@@ -1,4 +1,4 @@
-"""Integration tests for django-simple-deploy, targeting Fly.io."""
+"""Integration tests for django-simple-deploy, targeting a VPS."""
 
 import sys
 from pathlib import Path
@@ -23,7 +23,7 @@ from tests.integration_tests.conftest import (
 
 
 def test_settings(tmp_project):
-    """Verify there's a Digital Ocean-specific settings section.
+    """Verify there's a VPS-specific settings section.
     This function only checks the entire settings file. It does not examine
       individual settings.
 
@@ -32,7 +32,7 @@ def test_settings(tmp_project):
     modified, and if it's correct, copy that file to reference_files. Tests should pass
     again.
     """
-    hf.check_reference_file(tmp_project, "blog/settings.py", "dsd-digitalocean")
+    hf.check_reference_file(tmp_project, "blog/settings.py", "dsd-vps")
 
 
 def test_requirements_txt(tmp_project, pkg_manager, tmp_path, dsd_version):
@@ -46,7 +46,7 @@ def test_requirements_txt(tmp_project, pkg_manager, tmp_path, dsd_version):
         hf.check_reference_file(
             tmp_project,
             "requirements.txt",
-            "dsd-digitalocean",
+            "dsd-vps",
             context=context,
             tmp_path=tmp_path,
         )
@@ -63,7 +63,7 @@ def test_pyproject_toml(tmp_project, pkg_manager, tmp_path, dsd_version):
         hf.check_reference_file(
             tmp_project,
             "pyproject.toml",
-            "dsd-digitalocean",
+            "dsd-vps",
             context=context,
             tmp_path=tmp_path,
         )
@@ -76,16 +76,16 @@ def test_pipfile(tmp_project, pkg_manager, tmp_path, dsd_version):
     elif pkg_manager == "pipenv":
         context = {"current-version": dsd_version}
         hf.check_reference_file(
-            tmp_project, "Pipfile", "dsd-digitalocean", context=context, tmp_path=tmp_path
+            tmp_project, "Pipfile", "dsd-vps", context=context, tmp_path=tmp_path
         )
 
 
 def test_gitignore(tmp_project):
     """Test that .gitignore has been modified correctly."""
-    hf.check_reference_file(tmp_project, ".gitignore", "dsd-digitalocean")
+    hf.check_reference_file(tmp_project, ".gitignore", "dsd-vps")
 
 
-# --- Test Digital Ocean-specific files ---
+# --- Test VPS-specific files ---
 
 # Example test for a platform-specicific file such as Fly's Dockerfile
 # def test_creates_dockerfile(tmp_project, pkg_manager):
@@ -135,21 +135,21 @@ def test_log_dir(tmp_project):
     # DEV: Update these for more platform-specific log messages.
     # Spot check for opening log messages.
     assert "INFO: Logging run of `manage.py deploy`..." in log_file_text
-    assert "INFO: Configuring project for deployment to Digital Ocean..." in log_file_text
+    assert "INFO: Configuring project for deployment..." in log_file_text
 
     assert "INFO: CLI args:" in log_file_text
     assert (
-        "INFO: Deployment target: Digital Ocean" in log_file_text
-        or "INFO: Deployment target: Digital Ocean" in log_file_text
+        "INFO: Deployment target: VPS" in log_file_text
+        or "INFO: Deployment target: VPS" in log_file_text
     )
-    assert "INFO:   Using plugin: dsd_digitalocean" in log_file_text
+    assert "INFO:   Using plugin: dsd_vps" in log_file_text
     assert "INFO: Local project name: blog" in log_file_text
     assert "INFO: git status --porcelain" in log_file_text
     assert "INFO: ?? dsd_logs/" in log_file_text
 
     # Spot check for success messages.
     assert (
-        "INFO: --- Your project is now configured for deployment on Digital Ocean ---"
+        "INFO: --- Your project is now configured for deployment. ---"
         in log_file_text
     )
     assert "INFO: To deploy your project, you will need to:" in log_file_text

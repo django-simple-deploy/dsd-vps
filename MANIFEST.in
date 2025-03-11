@@ -1,2 +1,2 @@
 include LICENSE
-recursive-include dsd_digitalocean/templates *
+recursive-include dsd_vps/templates *

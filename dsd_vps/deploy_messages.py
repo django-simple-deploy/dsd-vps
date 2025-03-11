@@ -15,8 +15,8 @@ The --automate-all flag means django-simple-deploy will:
 - Open your deployed project in a new browser tab.
 """
 
-cancel_digital_ocean = """
-Okay, cancelling Digital Ocean configuration and deployment.
+cancel_vps = """
+Okay, cancelling VPS configuration and deployment.
 """
 
 # DEV: This could be moved to deploy_messages, with an arg for platform and URL.
