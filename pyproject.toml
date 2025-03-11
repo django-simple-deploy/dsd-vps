@@ -3,9 +3,9 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dsd-digitalocean"
+name = "dsd-vps"
 version = "0.1.0"
-description = "A plugin for django-simple-deploy, supporting deployments to Digital Ocean."
+description = "A plugin for django-simple-deploy, supporting deployments to VPS providers."
 readme = "README.md"
 
 authors = [
@@ -56,7 +56,7 @@ dev = [
 
 [tool.setuptools]
 packages = [
-    "dsd_digitalocean",
-    "dsd_digitalocean.templates",
+    "dsd_vps",
+    "dsd_vps.templates",
 ]
 include-package-data = true
