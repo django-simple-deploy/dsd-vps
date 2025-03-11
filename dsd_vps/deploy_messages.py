@@ -11,7 +11,7 @@ confirm_automate_all = """
 The --automate-all flag means django-simple-deploy will:
 - ...
 - Commit all changes to your project that are necessary for deployment.
-- Push these changes to Digital Ocean.
+- Push these changes to the remote server.
 - Open your deployed project in a new browser tab.
 """
 
@@ -19,19 +19,19 @@ cancel_vps = """
 Okay, cancelling VPS configuration and deployment.
 """
 
-# DEV: This could be moved to deploy_messages, with an arg for platform and URL.
-cli_not_installed = """
-In order to deploy to Digital Ocean, you need to install the Digital Ocean CLI.
-  See here: ...
-After installing the CLI, you can run the deploy command again.
-"""
+# # DEV: This could be moved to deploy_messages, with an arg for platform and URL.
+# cli_not_installed = """
+# In order to deploy to Digital Ocean, you need to install the Digital Ocean CLI.
+#   See here: ...
+# After installing the CLI, you can run the deploy command again.
+# """
 
-cli_logged_out = """
-You are currently logged out of the Digital Ocean CLI. Please log in,
-  and then run the deploy command again.
-You can log in from  the command line:
-  $ ...
-"""
+# cli_logged_out = """
+# You are currently logged out of the Digital Ocean CLI. Please log in,
+#   and then run the deploy command again.
+# You can log in from  the command line:
+#   $ ...
+# """
 
 
 # --- Dynamic strings ---
@@ -47,14 +47,14 @@ def success_msg(log_output=""):
 
     msg = dedent(
         f"""
-        --- Your project is now configured for deployment on Digital Ocean ---
+        --- Your project is now configured for deployment. ---
 
         To deploy your project, you will need to:
         - Commit the changes made in the configuration process.
             $ git status
             $ git add .
             $ git commit -am "Configured project for deployment."
-        - Push your project to Digital Ocean's servers:
+        - Push your project to the remote server:
             $ ...
         - Open your project:
             $ ...    
@@ -81,7 +81,7 @@ def success_msg_automate_all(deployed_url):
     msg = dedent(
         f"""
 
-        --- Your project should now be deployed on Digital Ocean ---
+        --- Your project should now be deployed. ---
 
         It should have opened up in a new browser tab. If you see a
           "server not available" message, wait a minute or two and
@@ -89,7 +89,7 @@ def success_msg_automate_all(deployed_url):
           server to be ready.
         - You can also visit your project at {deployed_url}
 
-        If you make further changes and want to push them to Digital Ocean,
+        If you make further changes and want to push them to the remote server,
         commit your changes and then run `...`.
     """
     )

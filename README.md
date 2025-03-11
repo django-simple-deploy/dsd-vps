@@ -33,14 +33,14 @@ Now run the `deploy` command:
 $ python manage.py deploy
 ```
 
-This is the `deploy` command from `django-simple-deploy`, which makes all the changes you need to run your project on Digital Ocean.
+This is the `deploy` command from `django-simple-deploy`, which makes all the changes you need to run your project on a VPS.
 
 ## Automated deployment
 
 This is experimental, and you should review the codebase before running this early version on your system. It will modify local files outside of your project, such as `~/.ssh/config` and `~/.ssh/id_rsa_git`.
 
-- Create a new droplet on Digital Ocean.
-    - I'm Using Ubuntu 24.04 for development work; any debian-based OS should work.
+- Create a new VPS instance.
+    - I'm Using Ubuntu 24.04 on Digital Ocean for development work; any debian-based OS on any VPS provider should work.
     - Choose SSH username/password login approach.
 - Set two env vars:
     - `$ export DSD_HOST_IPADDR=<droplet-ip-address>`

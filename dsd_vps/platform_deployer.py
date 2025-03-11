@@ -71,7 +71,7 @@ from django_simple_deploy.management.commands.utils.command_errors import DSDCom
 
 
 class PlatformDeployer:
-    """Perform the initial deployment to Digital Ocean
+    """Perform the initial deployment.
 
     If --automate-all is used, carry out an actual deployment.
     If not, do all configuration work so the user only has to commit changes, and ...
@@ -84,7 +84,7 @@ class PlatformDeployer:
 
     def deploy(self, *args, **options):
         """Coordinate the overall configuration and deployment."""
-        plugin_utils.write_output("\nConfiguring project for deployment to Digital Ocean...")
+        plugin_utils.write_output("\nConfiguring project for deployment...")
 
         self._validate_platform()
         self._prep_automate_all()
@@ -95,7 +95,7 @@ class PlatformDeployer:
         self._update_server()
         self._setup_server()
         
-        # Configure project for deployment to Digital Ocean.
+        # Configure project for deployment.
         self._add_requirements()
         self._modify_settings()
         self._add_serve_project_file()
@@ -111,7 +111,7 @@ class PlatformDeployer:
     # --- Helper methods for deploy() ---
 
     def _validate_platform(self):
-        """Make sure the local environment and project supports deployment to Digital Ocean.
+        """Make sure the local environment and project supports deployment to a VPS.
 
         Returns:
             None
@@ -281,7 +281,7 @@ class PlatformDeployer:
 
 
     def _conclude_automate_all(self):
-        """Finish automating the push to Digital Ocean.
+        """Finish automating the push.
 
         - Commit all changes.
         - ...
@@ -293,7 +293,7 @@ class PlatformDeployer:
         plugin_utils.commit_changes()
 
         # Push project.
-        plugin_utils.write_output("  Deploying to Digital Ocean...")
+        plugin_utils.write_output("  Deploying project...")
 
         do_utils.push_project()
         # Make serve script executable.

@@ -23,7 +23,7 @@ def test_dummy(tmp_project, request):
 # Skip this test and enable test_dummy() to speed up testing of setup steps.
 # @pytest.mark.skip
 def test_deployment(tmp_project, cli_options, request):
-    """Test the full, live deployment process to Digital Ocean."""
+    """Test the full, live deployment process to a VPS."""
 
     # Cache the platform name for teardown work.
     request.config.cache.set("platform", "dsd_vps")

@@ -1,4 +1,4 @@
-"""Utilities specific to Digital Ocean."""
+"""Utilities specific to deploying to a VPS."""
 
 import os
 import time

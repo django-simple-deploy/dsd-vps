@@ -1,6 +1,6 @@
 {{current_settings}}
 
-# Digital Ocean settings.
+# VPS settings.
 import os
 
 if os.environ.get("ON_DIGITALOCEAN"):
@@ -23,7 +23,7 @@ if os.environ.get("ON_DIGITALOCEAN"):
     else:
         DEBUG = False
 
-    # Set a Fly.io-specific allowed host.
+    # Set a platform-specific allowed host.
     ALLOWED_HOSTS.append("*")#"{{ deployed_project_name }}.fly.dev")
 
     # Prevent CSRF "Origin checking failed" issue.
