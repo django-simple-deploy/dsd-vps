@@ -83,6 +83,14 @@ def test_serve_project_sh(tmp_project, tmp_path):
     """Test that serve_project.sh is correct."""
     hf.check_reference_file(tmp_project, "serve_project.sh", "dsd-vps")
 
+def test_caddyfile(tmp_project, tmp_path):
+    """Test that Caddyfile is correct.
+
+    The file is written to the root directory of the local project during testing.
+    This checks that the contents are correct, not the actual location on the server.
+    """
+    hf.check_reference_file(tmp_project, "Caddyfile", "dsd-vps")
+
 
 def test_gitignore(tmp_project):
     """Test that .gitignore has been modified correctly."""

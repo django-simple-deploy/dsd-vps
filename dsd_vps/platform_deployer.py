@@ -216,6 +216,11 @@ class PlatformDeployer:
 
         with tempfile.NamedTemporaryFile() as tmp:
             path_local = Path(tmp.name)
+
+            # Write to the local project during testing, so we can test the contents.
+            if dsd_config.unit_testing:
+                path_local = dsd_config.project_root / "Caddyfile"
+            
             path_local.write_text(contents)
 
             path_remote = f"/home/{dsd_config.server_username}/Caddyfile"
