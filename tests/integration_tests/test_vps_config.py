@@ -79,6 +79,10 @@ def test_pipfile(tmp_project, pkg_manager, tmp_path, dsd_version):
             tmp_project, "Pipfile", "dsd-vps", context=context, tmp_path=tmp_path
         )
 
+def test_serve_project_sh(tmp_project, tmp_path):
+    """Test that serve_project.sh is correct."""
+    hf.check_reference_file(tmp_project, "serve_project.sh", "dsd-vps")
+
 
 def test_gitignore(tmp_project):
     """Test that .gitignore has been modified correctly."""
