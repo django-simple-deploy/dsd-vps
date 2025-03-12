@@ -31,6 +31,9 @@ def test_deployment(tmp_project, cli_options, request):
     print("\nTesting deployment to VPS using the following options:")
     print(cli_options.__dict__)
 
+    # Make sure we can create a vps instance to test against.
+    platform_utils.validate_do_cli()
+
     python_cmd = it_utils.get_python_exe(tmp_project)
 
     # Note: If not using automate_all, take steps here that the end user would take.
