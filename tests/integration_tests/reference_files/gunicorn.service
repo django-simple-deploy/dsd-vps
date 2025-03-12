@@ -1,0 +1,21 @@
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=django_user
+Group=www-data
+
+WorkingDirectory=/home/django_user/blog
+Environment="DEBUG=TRUE"
+Environment="ON_DIGITALOCEAN=1"
+
+ExecStart=/home/django_user/blog/.venv/bin/gunicorn \
+        --access-logfile - \
+        --workers 3 \
+        --bind unix:/run/gunicorn.sock \
+        blog.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

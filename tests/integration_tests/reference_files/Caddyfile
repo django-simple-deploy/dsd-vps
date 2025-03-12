@@ -1,0 +1,11 @@
+{
+    debug
+}
+
+None {
+    encode zstd gzip
+
+    handle {
+        reverse_proxy unix//run/gunicorn.sock
+    }
+}

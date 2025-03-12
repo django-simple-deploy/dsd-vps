@@ -4,52 +4,6 @@ VPS notes:
 
 - All actions taken against the server should be idempotent if at all possible. If an
   action is not idempotent, that should be noted.
-
-VPS notes:
-
-- 
-
-
-General plugin development notes:
-
-Add a new file to the user's project, without using a template:
-
-    def _add_dockerignore(self):
-        # Add a dockerignore file, based on user's local project environmnet.
-        path = dsd_config.project_root / ".dockerignore"
-        dockerignore_str = self._build_dockerignore()
-        plugin_utils.add_file(path, dockerignore_str)
-
-Add a new file to the user's project, using a template:
-
-    def _add_dockerfile(self):
-        # Add a minimal dockerfile.
-        template_path = self.templates_path / "dockerfile_example"
-        context = {
-            "django_project_name": dsd_config.local_project_name,
-        }
-        contents = plugin_utils.get_template_string(template_path, context)
-
-        # Write file to project.
-        path = dsd_config.project_root / "Dockerfile"
-        plugin_utils.add_file(path, contents)
-
-Modify user's settings file:
-
-    def _modify_settings(self):
-        # Add platformsh-specific settings.
-        template_path = self.templates_path / "settings.py"
-        context = {
-            "deployed_project_name": self._get_deployed_project_name(),
-        }
-        plugin_utils.modify_settings_file(template_path, context)
-
-Add a set of requirements:
-
-    def _add_requirements(self):
-        # Add requirements for deploying to Fly.io.
-        requirements = ["gunicorn", "psycopg2-binary", "dj-database-url", "whitenoise"]
-        plugin_utils.add_packages(requirements)
 """
 
 import sys, os, re, json
@@ -89,7 +43,6 @@ class PlatformDeployer:
         self._validate_platform()
         self._prep_automate_all()
 
-
         # Configure server.
         self._connect_server()
         self._update_server()
@@ -102,8 +55,6 @@ class PlatformDeployer:
 
         self._add_caddyfile()
         self._configure_gunicorn()
-
-
 
         self._conclude_automate_all()
         self._show_success_message()
@@ -216,6 +167,11 @@ class PlatformDeployer:
 
         with tempfile.NamedTemporaryFile() as tmp:
             path_local = Path(tmp.name)
+
+            # Write to the local project during testing, so we can test the contents.
+            if dsd_config.unit_testing:
+                path_local = dsd_config.project_root / "Caddyfile"
+            
             path_local.write_text(contents)
 
             path_remote = f"/home/{dsd_config.server_username}/Caddyfile"
@@ -259,6 +215,11 @@ class PlatformDeployer:
         contents = plugin_utils.get_template_string(template_path, context)
         with tempfile.NamedTemporaryFile() as tmp:
             path_local = Path(tmp.name)
+
+            # Write to the local project during testing, so we can test the contents.
+            if dsd_config.unit_testing:
+                path_local = dsd_config.project_root / "gunicorn.service"
+            
             path_local.write_text(contents)
 
             # cmd = f"scp {path.as_posix()} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/etc/systemd/system/gunicorn.service"

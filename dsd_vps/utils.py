@@ -29,6 +29,10 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
     else:
         plugin_utils.write_output("  (command not shown)", skip_logging=skip_logging)
 
+    # Skip during local testing.
+    if dsd_config.unit_testing:
+        return
+
     # Get client.
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -69,6 +73,10 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
         skip_logging = False
 
     plugin_utils.write_output(f"Copying {path_local.as_posix()} to server.", skip_logging=skip_logging)
+
+    # Skip during local testing.
+    if dsd_config.unit_testing:
+        return
 
     # Get client.
     client = paramiko.SSHClient()
@@ -274,6 +282,10 @@ def configure_git(templates_path):
     # --- Server configuration ---
     plugin_utils.write_output("Initializing Git project on server...")
 
+    # Skip for local testing.
+    if dsd_config.unit_testing:
+        return
+
     # Configure ssh keys, so push can happen without prompting for password.
     # Generate key pair.
     ipaddr = os.environ.get("DSD_HOST_IPADDR")
@@ -385,6 +397,10 @@ def push_project():
     """Push the project to the server."""
     plugin_utils.write_output("  Pushing project code to server.")
     # DEV: --force during development
+    # Skip during local testing.
+    if dsd_config.unit_testing:
+        return
+
     cmd = f"git push do_server main --force"
     output_obj = plugin_utils.run_quick_command(cmd)
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
