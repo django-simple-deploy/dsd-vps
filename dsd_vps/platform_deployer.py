@@ -43,7 +43,6 @@ class PlatformDeployer:
         self._validate_platform()
         self._prep_automate_all()
 
-
         # Configure server.
         self._connect_server()
         self._update_server()
@@ -56,8 +55,6 @@ class PlatformDeployer:
 
         self._add_caddyfile()
         self._configure_gunicorn()
-
-
 
         self._conclude_automate_all()
         self._show_success_message()
