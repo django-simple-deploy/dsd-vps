@@ -264,6 +264,11 @@ class PlatformDeployer:
         contents = plugin_utils.get_template_string(template_path, context)
         with tempfile.NamedTemporaryFile() as tmp:
             path_local = Path(tmp.name)
+
+            # Write to the local project during testing, so we can test the contents.
+            if dsd_config.unit_testing:
+                path_local = dsd_config.project_root / "gunicorn.service"
+            
             path_local.write_text(contents)
 
             # cmd = f"scp {path.as_posix()} {dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:/etc/systemd/system/gunicorn.service"

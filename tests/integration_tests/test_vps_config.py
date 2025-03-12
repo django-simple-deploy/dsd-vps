@@ -91,6 +91,15 @@ def test_caddyfile(tmp_project, tmp_path):
     """
     hf.check_reference_file(tmp_project, "Caddyfile", "dsd-vps")
 
+def test_gunicorn_service_file(tmp_project):
+    """Test that gunicorn.service is correct.
+
+    gunicorn.socket is a static file, and is not tested.
+    """
+    hf.check_reference_file(tmp_project, "gunicorn.service", "dsd-vps")
+
+
+
 
 def test_gitignore(tmp_project):
     """Test that .gitignore has been modified correctly."""
