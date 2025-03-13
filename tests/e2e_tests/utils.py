@@ -6,6 +6,7 @@ Some Fly.io functions are included as an example.
 import re, time
 import json
 import subprocess
+import shlex
 
 import pytest
 
@@ -79,15 +80,16 @@ def validate_do_cli():
     DEV: This may be generalized by a parent that makes sure some host platform's 
     CLI is installed, or otherwise verify we'll be able to make a vps instance.
     """
-    cmd = "doctl --version"
+    cmd = "doctl version"
+    cmd_parts = shlex.split(cmd)
     print(f"Checking that DO CLI is installed: {cmd}")
     try:
-        output = subprocess.run(cmd, capture_output=True).stdout.decode().strip()
+        output = subprocess.run(cmd_parts, capture_output=True).stdout.decode().strip()
     except FileNotFoundError:
         msg = "DO CLI is not installed; cannot create a VPS instance for testing."
         pytest.exit(msg)
     else:
-        print(f"\nDO CLI version: {output}")
+        print(f"  DO CLI version: {output}")
 
 
 def create_vps_instance():

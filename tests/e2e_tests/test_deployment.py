@@ -41,6 +41,7 @@ def test_deployment(tmp_project, cli_options, request):
     # if not cli_options.automate_all:
     #     app_name = platform_utils.create_project()
     #     request.config.cache.set("app_name", app_name)
+    # platform_utils.create_vps_instance()
 
     # Run simple_deploy against the test project.
     it_utils.run_simple_deploy(python_cmd, automate_all=cli_options.automate_all)
