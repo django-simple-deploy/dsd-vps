@@ -80,17 +80,33 @@ def validate_do_cli():
     DEV: This may be generalized by a parent that makes sure some host platform's 
     CLI is installed, or otherwise verify we'll be able to make a vps instance.
     """
+    # Make sure doctl is installed.
     cmd = "doctl version"
     cmd_parts = shlex.split(cmd)
     print(f"Checking that DO CLI is installed: {cmd}")
     try:
         output = subprocess.run(cmd_parts, capture_output=True).stdout.decode().strip()
     except FileNotFoundError:
-        msg = "DO CLI is not installed; cannot create a VPS instance for testing."
+        msg = "  DO CLI is not installed; cannot create a VPS instance for testing."
+        print(msg)
         pytest.exit(msg)
     else:
         print(f"  DO CLI version: {output}")
 
+    # Make sure it's authenticated.
+    cmd = "doctl account get"
+    cmd_parts = shlex.split(cmd)
+    print(f"Checking that CLI is authenticated: {cmd}")
+    # breakpoint()
+    output = subprocess.run(cmd_parts, capture_output=True)
+    stderr = output.stderr.decode()
+    if "Unable to initialize DigitalOcean API client" in stderr:
+        msg = "  DO CLI is not authenticated; maybe run `doctl auth init`?"
+        print(msg)
+        pytest.exit(msg)
+    else:
+        stdout = output.stdout.decode()
+        print(f"  {stdout}")
 
 def create_vps_instance():
     """Create a vps instance to test against."""
