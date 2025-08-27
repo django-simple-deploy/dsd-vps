@@ -8,8 +8,5 @@ Changelog: dsd-<platformname>
 
 #### External changes
 
-- 
-
-#### Internal changes
-
-- 
+- Initial release, preliminary functionality.
+- Release primarily made to claim name on PyPI.

@@ -43,15 +43,13 @@ This is experimental, and you should review the codebase before running this ear
     - I'm Using Ubuntu 24.04 on Digital Ocean for development work; any debian-based OS on any VPS provider should work.
     - Choose SSH username/password login approach.
 - Set two env vars:
-    - `$ export DSD_HOST_IPADDR=<droplet-ip-address>`
-    - `$ export DSD_HOST_PW=<droplet-pw>`
-- Install `dsd-vps`.
-    - This will be changed to `dsd-vps` shortly, as it should work for all VPS hosting platforms.
-    - This plugin is not yet available on PyPI; I'm currently using an editable install of the repo.
+    - `$ export DSD_HOST_IPADDR=<instance-ip-address>`
+    - `$ export DSD_HOST_PW=<instance-pw>`
+- Install `dsd-vps`. (If you cloned this repo, you probably want to make a local editable install of `dsd-vps`.)
 - Add `django_simple_deploy` to `INSTALLED_APPS`.
 - Run `python manage.py deploy --automate-all`.
 
-The `deploy` command will add a new user named `django_user` to the droplet, with the same password you originally chose. It will update and configure the server, configure Git on the server, configure the project to be served from the droplet, commit changes, push the project, and open the remote project in a new browser tab.
+The `deploy` command will add a new user named `django_user` to the instance, with the same password you originally chose. It will update and configure the server, configure Git on the server, configure the project to be served from the droplet, commit changes, push the project, and open the remote project in a new browser tab.
 
 It will add a local ssh key pair for Git, modifying `~/.ssh/config`. The key will be stored at `~/.ssh/id_rsa_git`.
 
