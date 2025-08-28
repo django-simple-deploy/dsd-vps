@@ -160,9 +160,15 @@ class PlatformDeployer:
         This configures Caddy, for serving static files.
         """
         template_path = self.templates_path / "Caddyfile"
+
         context = {
             "server_ip_address": os.environ.get("DSD_HOST_IPADDR")
         }
+        
+        # Don't set server address when testing.
+        if dsd_config.unit_testing:
+            context["server_ip_address"] = None
+
         contents = plugin_utils.get_template_string(template_path, context)
 
         with tempfile.NamedTemporaryFile() as tmp:
