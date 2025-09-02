@@ -21,10 +21,6 @@ def dsd_get_plugin_config():
 
 @django_simple_deploy.hookimpl
 def dsd_get_plugin_cli_args(parser):
-    # parser.add_argument(
-    #     "--ssh-key",
-    #     help="Path to private SSH key for accessing VPS instance.",
-    # )
     plugin_cli = cli.PluginCLI(parser)
 
 
