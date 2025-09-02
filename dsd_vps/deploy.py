@@ -18,6 +18,14 @@ def dsd_get_plugin_config():
 
 
 @django_simple_deploy.hookimpl
+def dsd_get_plugin_cli_args(parser):
+    parser.add_argument(
+        "--ssh-key",
+        help="Path to private SSH key for accessing VPS instance.",
+    )
+
+
+@django_simple_deploy.hookimpl
 def dsd_deploy():
     """Carry out platform-specific deployment steps."""
     platform_deployer = PlatformDeployer()
