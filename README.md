@@ -42,9 +42,11 @@ This is experimental, and you should review the codebase before running this ear
 - Create a new VPS instance.
     - I'm Using Ubuntu 24.04 on Digital Ocean for development work; any debian-based OS on any VPS provider should work.
     - Choose SSH username/password login approach, *not* SSH key (for now).
+      - In particular, you might need to edit the configuration for the host's ssh server, to allow root to login with a password.
 - Set two local env vars:
     - `$ export DSD_HOST_IPADDR=<instance-ip-address>`
     - `$ export DSD_HOST_PW=<instance-pw>`
+      This should be the existing root password on the target host.  This plugin will also create a user named `django_user` with the same password.
 - Install `dsd-vps`. (If you cloned this repo, you probably want to make a local editable install of `dsd-vps`.)
 - Add `django_simple_deploy` to `INSTALLED_APPS`.
 - Run `python manage.py deploy --automate-all`.
