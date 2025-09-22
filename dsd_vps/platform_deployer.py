@@ -74,7 +74,13 @@ class PlatformDeployer:
 
     def _prep_automate_all(self):
         """Take any further actions needed if using automate_all."""
-        pass
+        if not plugin_config.platform:
+            msg = "You must specify a --platform in order to use --automate-all."
+        if plugin_config.platform == "digital_ocean":
+            # Make a new droplet, and get droplet ID.
+            pass
+
+            # Get IP address of new droplet.
 
 
     def _connect_server(self):

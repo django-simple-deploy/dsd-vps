@@ -24,6 +24,13 @@ class PluginCLI:
         )
 
         plugin_group.add_argument(
+            "--platform",
+            type=Path,
+            help="Hosting platform, such as digital_ocean.",
+            default=None,
+        )
+
+        plugin_group.add_argument(
             "--ssh-key",
             type=Path,
             help="Path to private SSH key for accessing VPS instance.",
@@ -33,13 +40,32 @@ class PluginCLI:
 
 def validate_cli(options):
     """Validate options that were passed to CLI."""
+    platform = options["platform"]
+    _validate_platform(platform)
+
     ssh_key = options(["ssh_key"])
     if ssh_key is not None:
         path_ssh_key = Path(options["ssh_key"])
         _validate_ssh_key(path_ssh_key)
 
 
+
 # --- Helper functions ---
+
+def _validate_platform(platform):
+    """Validate the --platform arg.
+
+    Should only be used to create initial resources on server in fully automated workflow.
+    """
+    # DEV: If using --automate-all, must specify platform.
+    if not platform:
+        return
+
+    supported_platforms = ["digital_ocean"]
+    if platform not in supported_platforms:
+        msg = f"The platform arg must be one of: {', '.join(supported_platforms)}"
+        raise DSDCommandError(msg)
+
 
 def _validate_ssh_key(path_ssh_key):
     """Validate the ssh key arg that was passed.
