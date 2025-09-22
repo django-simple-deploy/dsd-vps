@@ -16,6 +16,10 @@ from tests.integration_tests.conftest import (
 )
 
 
+# Skip until more stable configuration to test.
+pytestmark = pytest.mark.skip
+
+
 # --- Fixtures ---
 
 

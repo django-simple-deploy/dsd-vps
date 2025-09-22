@@ -7,21 +7,26 @@ Notes:
 import django_simple_deploy
 
 from dsd_vps.platform_deployer import PlatformDeployer
-from .plugin_config import PluginConfig
-
-from . import cli
+from .plugin_config import plugin_config
+from .cli import PluginCLI, validate_cli
 
 
 @django_simple_deploy.hookimpl
 def dsd_get_plugin_config():
     """Get platform-specific attributes needed by core."""
-    plugin_config = PluginConfig()
     return plugin_config
 
 
 @django_simple_deploy.hookimpl
-def dsd_get_plugin_cli_args(parser):
-    plugin_cli = cli.PluginCLI(parser)
+def dsd_get_plugin_cli(parser):
+    """Get plugin's CLI extension."""
+    plugin_cli = PluginCLI(parser)
+
+
+@django_simple_deploy.hookimpl
+def dsd_validate_cli(options):
+    """Validate and parse plugin-specific CLI args."""
+    validate_cli(options)
 
 
 @django_simple_deploy.hookimpl
