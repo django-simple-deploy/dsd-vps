@@ -16,6 +16,7 @@ from django.utils.safestring import mark_safe
 
 import requests
 
+from .plugin_config import plugin_config
 from . import deploy_messages as platform_msgs
 from . import utils as do_utils
 
@@ -74,6 +75,9 @@ class PlatformDeployer:
 
     def _prep_automate_all(self):
         """Take any further actions needed if using automate_all."""
+        if not dsd_config.automate_all:
+            return
+            
         if not plugin_config.platform:
             msg = "You must specify a --platform in order to use --automate-all."
         if plugin_config.platform == "digital_ocean":

@@ -25,7 +25,7 @@ class PluginCLI:
 
         plugin_group.add_argument(
             "--platform",
-            type=Path,
+            type=str,
             help="Hosting platform, such as digital_ocean.",
             default=None,
         )
@@ -43,7 +43,7 @@ def validate_cli(options):
     platform = options["platform"]
     _validate_platform(platform)
 
-    ssh_key = options(["ssh_key"])
+    ssh_key = options["ssh_key"]
     if ssh_key is not None:
         path_ssh_key = Path(options["ssh_key"])
         _validate_ssh_key(path_ssh_key)
