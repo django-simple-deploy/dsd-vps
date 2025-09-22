@@ -1,0 +1,4 @@
+Options for dsd-vps:
+  Plugin-specific CLI args for dsd-vps
+
+  --ssh-key SSH_KEY     Path to private SSH key for accessing VPS instance.
