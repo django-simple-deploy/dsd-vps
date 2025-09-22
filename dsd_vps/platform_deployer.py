@@ -88,14 +88,42 @@ class PlatformDeployer:
             # Make a new droplet, and get droplet ID.
             cmd = "doctl compute droplet create dsd-e2e-test --image ubuntu-25-04-x64 --size s-1vcpu-1gb --region nyc3 -o json"
             output = plugin_utils.run_quick_command(cmd)
-
-            output_json = json.loads(output)
-            id_droplet = output_json[0]["id"]
-
             plugin_utils.write_output(output)
 
+            output_json = json.loads(output)
+            plugin_config.droplet_id = output_json[0]["id"]
+
+            msg = f"  Droplet ID: {plugin_config.droplet_id}"
+
+            # Sleep 3 seconds to let droplet spin up.
+            plugin_utils.write_output("  Sleeping to let droplet spin up...")
+            time.sleep(3)
 
             # Get IP address of new droplet.
+            plugin_config.ip_address = None
+            num_tries = 0
+            while not plugin_config.ip_address and num_tries < 5:
+                plugin_utils.write_output("  Querying for ip_address...")
+
+                cmd = f"doctl compute droplet get {plugin_config.droplet_id} -o json"
+                output = plugin_utils.run_quick_command(cmd)
+                output_json = json.loads(output)
+
+                if output_json[0]["status"] == "new":
+                    time.sleep(1)
+                    num_tries += 1
+                    continue
+                else:
+                    # ip address should be available
+                    plugin_config.ip_address = output_json[0]["networks"]["v4"][0]["ip_address"]
+                    plugin_utils.write_output(f"  IP address: {plugin_config.ip_address}")
+
+            if not plugin_config.ip_address:
+                msg = f"Could not find ip_address. Tried {num_tries} times."
+                raise DSDCommandError(msg)
+
+
+
 
 
     def _connect_server(self):
