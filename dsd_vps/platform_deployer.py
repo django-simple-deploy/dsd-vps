@@ -77,12 +77,23 @@ class PlatformDeployer:
         """Take any further actions needed if using automate_all."""
         if not dsd_config.automate_all:
             return
-            
+
         if not plugin_config.platform:
             msg = "You must specify a --platform in order to use --automate-all."
+            raise DSDCommandError(msg)
+
         if plugin_config.platform == "digital_ocean":
+            plugin_utils.write_output("Creating droplet on Digital Ocean...")
+
             # Make a new droplet, and get droplet ID.
-            pass
+            cmd = "doctl compute droplet create dsd-e2e-test --image ubuntu-25-04-x64 --size s-1vcpu-1gb --region nyc3 -o json"
+            output = plugin_utils.run_quick_command(cmd)
+
+            output_json = json.loads(output)
+            id_droplet = output_json[0]["id"]
+
+            plugin_utils.write_output(output)
+
 
             # Get IP address of new droplet.
 

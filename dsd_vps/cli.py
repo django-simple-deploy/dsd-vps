@@ -61,9 +61,8 @@ def _validate_platform(platform):
     if not platform:
         return
 
-    supported_platforms = ["digital_ocean"]
-    if platform not in supported_platforms:
-        msg = f"The platform arg must be one of: {', '.join(supported_platforms)}"
+    if platform not in plugin_config.supported_platforms:
+        msg = f"The platform arg must be one of: {', '.join(plugin_config.supported_platforms)}"
         raise DSDCommandError(msg)
 
 
