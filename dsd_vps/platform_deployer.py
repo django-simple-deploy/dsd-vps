@@ -88,7 +88,7 @@ class PlatformDeployer:
             # Make a new droplet, and get droplet ID.
             cmd = "doctl compute droplet create dsd-e2e-test --image ubuntu-25-04-x64 --size s-1vcpu-1gb --region nyc3 -o json"
             output = plugin_utils.run_quick_command(cmd).stdout.decode()
-            plugin_utils.write_output(output)
+            plugin_utils.write_output(output, write_to_console=False)
 
             output_json = json.loads(output)
             plugin_config.droplet_id = output_json[0]["id"]
