@@ -102,7 +102,6 @@ class PlatformDeployer:
             time.sleep(pause)
 
             # Get IP address of new droplet.
-            # plugin_config.ip_address = None
             droplet_status = "new"
             num_tries = 0
             while droplet_status == "new" and num_tries < 10:
@@ -118,9 +117,9 @@ class PlatformDeployer:
                     time.sleep(5)
                     num_tries += 1
                 
-            # ip address should be available
+            # IP address should be available
             # There are two, and they haven't been in a consistent order.
-            # We're looking to the ip address starting with 3 digits.
+            # We're looking for the IP address starting with 3 digits.
             ip_addresses = [
                 network_dict["ip_address"]
                 for network_dict in output_json[0]["networks"]["v4"]
@@ -137,34 +136,6 @@ class PlatformDeployer:
 
             msg = f"  IP address: {plugin_config.ip_address}"
             plugin_utils.write_output(msg)
-
-
-            # ip_address = None
-            # for network_dict in output_json[0]["networks"]["v4"]:
-            #     ip_address = network_dict["ip_address"]
-            #     if len(ip_address.split(".")[0]) == 3:
-            #         break
-
-            # if ip_address:
-            #     plugin_config.ip_address = ip_address
-            # else:
-            #     msg = 
-
-
-
-
-
-            #         plugin_config.ip_address = output_json[0]["networks"]["v4"][0]["ip_address"]
-            #         plugin_utils.write_output(f"  IP address: {plugin_config.ip_address}")
-
-            # if not plugin_config.ip_address:
-            #     msg = f"Could not find ip_address. Tried {num_tries} times."
-            #     raise DSDCommandError(msg)
-
-            breakpoint()
-
-
-
 
 
     def _connect_server(self):
