@@ -65,6 +65,9 @@ def _validate_platform(platform):
         msg = f"The platform arg must be one of: {', '.join(plugin_config.supported_platforms)}"
         raise DSDCommandError(msg)
 
+    # --platform arg is valid.
+    plugin_config.platform = platform
+
 
 def _validate_ssh_key(path_ssh_key):
     """Validate the ssh key arg that was passed.

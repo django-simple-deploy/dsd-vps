@@ -87,40 +87,81 @@ class PlatformDeployer:
 
             # Make a new droplet, and get droplet ID.
             cmd = "doctl compute droplet create dsd-e2e-test --image ubuntu-25-04-x64 --size s-1vcpu-1gb --region nyc3 -o json"
-            output = plugin_utils.run_quick_command(cmd)
+            output = plugin_utils.run_quick_command(cmd).stdout.decode()
             plugin_utils.write_output(output)
 
             output_json = json.loads(output)
             plugin_config.droplet_id = output_json[0]["id"]
 
             msg = f"  Droplet ID: {plugin_config.droplet_id}"
+            plugin_utils.write_output(msg)
 
             # Sleep 3 seconds to let droplet spin up.
-            plugin_utils.write_output("  Sleeping to let droplet spin up...")
-            time.sleep(3)
+            pause = 10
+            plugin_utils.write_output(f"    Sleeping {pause} seconds to let droplet spin up...")
+            time.sleep(pause)
 
             # Get IP address of new droplet.
-            plugin_config.ip_address = None
+            # plugin_config.ip_address = None
+            droplet_status = "new"
             num_tries = 0
-            while not plugin_config.ip_address and num_tries < 5:
-                plugin_utils.write_output("  Querying for ip_address...")
+            while droplet_status == "new" and num_tries < 10:
+                plugin_utils.write_output("    Querying for ip_address...")
 
                 cmd = f"doctl compute droplet get {plugin_config.droplet_id} -o json"
-                output = plugin_utils.run_quick_command(cmd)
+                output = plugin_utils.run_quick_command(cmd).stdout.decode()
                 output_json = json.loads(output)
 
-                if output_json[0]["status"] == "new":
-                    time.sleep(1)
+                droplet_status = output_json[0]["status"]
+
+                if droplet_status == "new":
+                    time.sleep(5)
                     num_tries += 1
-                    continue
-                else:
-                    # ip address should be available
-                    plugin_config.ip_address = output_json[0]["networks"]["v4"][0]["ip_address"]
-                    plugin_utils.write_output(f"  IP address: {plugin_config.ip_address}")
+                
+            # ip address should be available
+            # There are two, and they haven't been in a consistent order.
+            # We're looking to the ip address starting with 3 digits.
+            ip_addresses = [
+                network_dict["ip_address"]
+                for network_dict in output_json[0]["networks"]["v4"]
+            ]
+
+            for ip_address in ip_addresses:
+                if len(ip_address.split(".")[0]) == 3:
+                    plugin_config.ip_address = ip_address
+                    break
 
             if not plugin_config.ip_address:
-                msg = f"Could not find ip_address. Tried {num_tries} times."
+                msg = "Could not identify IP address."
                 raise DSDCommandError(msg)
+
+            msg = f"  IP address: {plugin_config.ip_address}"
+            plugin_utils.write_output(msg)
+
+
+            # ip_address = None
+            # for network_dict in output_json[0]["networks"]["v4"]:
+            #     ip_address = network_dict["ip_address"]
+            #     if len(ip_address.split(".")[0]) == 3:
+            #         break
+
+            # if ip_address:
+            #     plugin_config.ip_address = ip_address
+            # else:
+            #     msg = 
+
+
+
+
+
+            #         plugin_config.ip_address = output_json[0]["networks"]["v4"][0]["ip_address"]
+            #         plugin_utils.write_output(f"  IP address: {plugin_config.ip_address}")
+
+            # if not plugin_config.ip_address:
+            #     msg = f"Could not find ip_address. Tried {num_tries} times."
+            #     raise DSDCommandError(msg)
+
+            breakpoint()
 
 
 
