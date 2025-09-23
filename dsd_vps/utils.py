@@ -1,5 +1,6 @@
 """Utilities specific to deploying to a VPS."""
 
+import json
 import os
 import time
 from pathlib import Path
@@ -10,6 +11,32 @@ from paramiko.ssh_exception import NoValidConnectionsError
 from django_simple_deploy.management.commands.utils import plugin_utils
 from django_simple_deploy.management.commands.utils.plugin_utils import dsd_config
 from django_simple_deploy.management.commands.utils.command_errors import DSDCommandError
+
+from .plugin_config import plugin_config
+
+
+def get_ssh_key_ids_digitalocean():
+    """Get any existing ssh key IDs on Digital Ocean."""
+    cmd = "doctl compute ssh-key list -o json"
+    output = plugin_utils.run_quick_command(cmd, skip_logging=True).stdout.decode()
+    key_dicts = json.loads(output)
+
+    ssh_key_ids = [key_dict["id"] for key_dict in key_dicts]
+
+    if len(ssh_key_ids) == 1:
+        ssh_key_id = ssh_key_ids[0]
+        key_name = key_dicts[0]["name"]
+        msg = f"\nWould you like to use the DO ssh key ID {ssh_key_id}, from the key {key_name}? "
+        proceed = plugin_utils.get_confirmation(msg, skip_logging=True)
+
+        if proceed:
+            return ssh_key_id
+        else:
+            msg = "Can't proceed without an SSH key id."
+            raise DSDCommandError(msg)
+
+
+
 
 
 def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
@@ -36,6 +63,7 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
     # Get client.
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    breakpoint()
 
     # Run command, and close connection.
     try:
