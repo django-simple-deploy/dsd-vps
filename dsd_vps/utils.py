@@ -35,6 +35,10 @@ def get_ssh_key_ids_digitalocean():
             msg = "Can't proceed without an SSH key id."
             raise DSDCommandError(msg)
 
+    # Show keys, in a call to plugin_utils.get_numbered_choice().
+
+
+    # If appropriate, offer to generate a new key.
 
 
 
