@@ -68,20 +68,44 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
     # Get client.
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    breakpoint()
 
     # Run command, and close connection.
     try:
-        client.connect(
-            hostname = os.environ.get("DSD_HOST_IPADDR"),
-            username = dsd_config.server_username,
-            password = os.environ.get("DSD_HOST_PW"),
-            timeout = timeout
-        )
-        _stdin, _stdout, _stderr = client.exec_command(cmd)
+        if plugin_config.path_ssh_key:
+            num_tries = 0
+            pause = 20
+            while num_tries < 10:
+                try:
+                    plugin_utils.write_output("    Trying to connect using ssh key...")
+                    client.connect(
+                        hostname = plugin_config.ip_address,
+                        username = "root",
+                        key_filename = plugin_config.path_ssh_key.as_posix(),
+                        timeout = timeout
+                    )
+                except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError) as e:
+                    plugin_utils.write_output(str(e))
+                    plugin_utils.write_output(f"      Attempt failed, waiting {pause}s...")
+                    time.sleep(pause)
+                    num_tries += 1
+                else:
+                    break
 
-        stdout = _stdout.read().decode().strip()
-        stderr = _stderr.read().decode().strip()
+            _stdin, _stdout, _stderr = client.exec_command(cmd)
+
+            stdout = _stdout.read().decode().strip()
+            stderr = _stderr.read().decode().strip()
+        else:
+            client.connect(
+                hostname = os.environ.get("DSD_HOST_IPADDR"),
+                username = dsd_config.server_username,
+                password = os.environ.get("DSD_HOST_PW"),
+                timeout = timeout
+            )
+            _stdin, _stdout, _stderr = client.exec_command(cmd)
+
+            stdout = _stdout.read().decode().strip()
+            stderr = _stderr.read().decode().strip()
     finally:
         client.close()
 
@@ -174,8 +198,15 @@ def set_server_username():
         plugin_utils.write_output(f"  username: {username}")
         return
 
-    # No custom username. Try to connect with default username.
+    # No custom username. Use "django_user" from this point forward.
     dsd_config.server_username = "django_user"
+
+    # If using ssh keys, create django_user in case they don't exist..
+    if plugin_config.path_ssh_key:
+        add_server_user()
+        plugin_utils.write_output(f"  username: {dsd_config.server_username}")
+
+    # No custom username, and not using ssh keys. Try to connect with default username.
     try:
         run_server_cmd_ssh("uptime")
     except paramiko.ssh_exception.AuthenticationException:
@@ -268,7 +299,10 @@ def add_server_user():
     django_username = "django_user"
     plugin_utils.write_output(f"Adding non-root user: {django_username}")
     cmd = f"useradd -m {django_username}"
-    run_server_cmd_ssh(cmd)
+    stdout, stderr = run_server_cmd_ssh(cmd)
+
+    if "already exists" in stderr:
+        return
 
     # Set the password.
     plugin_utils.write_output("  Setting password; will not display or log this.")

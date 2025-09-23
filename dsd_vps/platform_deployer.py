@@ -112,6 +112,7 @@ class PlatformDeployer:
 
                 cmd = f"doctl compute droplet get {plugin_config.droplet_id} -o json"
                 output = plugin_utils.run_quick_command(cmd).stdout.decode()
+                plugin_utils.write_output(output, write_to_console=False)
                 output_json = json.loads(output)
 
                 droplet_status = output_json[0]["status"]
@@ -120,17 +121,13 @@ class PlatformDeployer:
                     time.sleep(5)
                     num_tries += 1
                 
-            # IP address should be available
+            # Public IP address should be available
             # There are two, and they haven't been in a consistent order.
             # We're looking for the IP address starting with 3 digits.
-            ip_addresses = [
-                network_dict["ip_address"]
-                for network_dict in output_json[0]["networks"]["v4"]
-            ]
-
-            for ip_address in ip_addresses:
-                if len(ip_address.split(".")[0]) == 3:
-                    plugin_config.ip_address = ip_address
+            network_dicts = output_json[0]["networks"]["v4"]
+            for network_dict in network_dicts:
+                if network_dict["type"] == "public":
+                    plugin_config.ip_address = network_dict["ip_address"]
                     break
 
             if not plugin_config.ip_address:
@@ -143,8 +140,8 @@ class PlatformDeployer:
 
     def _connect_server(self):
         """Make sure we can connect to the server, with an appropriate username."""
-        breakpoint()
         do_utils.set_server_username()
+        breakpoint()
         do_utils.configure_firewall()
 
 
