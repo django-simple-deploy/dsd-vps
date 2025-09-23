@@ -30,7 +30,7 @@ def get_ssh_key_ids_digitalocean():
         proceed = plugin_utils.get_confirmation(msg, skip_logging=True)
 
         if proceed:
-            plugin_utils.ssh_key_id = ssh_key_id
+            plugin_config.ssh_key_id = ssh_key_id
             return
         else:
             msg = "Can't proceed without an SSH key id."
