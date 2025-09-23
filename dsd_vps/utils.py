@@ -140,18 +140,43 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     # Copy file, and close connection.
-    try:
-        client.connect(
-            hostname = os.environ.get("DSD_HOST_IPADDR"),
-            username = dsd_config.server_username,
-            password = os.environ.get("DSD_HOST_PW"),
-            timeout = timeout
-        )
+    if plugin_config.path_ssh_key:
+        num_tries = 0
+        pause = 20
+        while num_tries < 10:
+            try:
+                plugin_utils.write_output("    Trying to connect using ssh key...")
+                client.connect(
+                    hostname = plugin_config.ip_address,
+                    username = dsd_config.server_username,
+                    key_filename = plugin_config.path_ssh_key.as_posix(),
+                    timeout = timeout
+                )
+            except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError) as e:
+                plugin_utils.write_output(str(e))
+                plugin_utils.write_output(f"      Attempt failed, waiting {pause}s...")
+                time.sleep(pause)
+                num_tries += 1
+            else:
+                break
+
         sftp = client.open_sftp()
         sftp.put(path_local, path_remote)
         sftp.close()
-    finally:
         client.close()
+    else:
+        try:
+            client.connect(
+                hostname = os.environ.get("DSD_HOST_IPADDR"),
+                username = dsd_config.server_username,
+                password = os.environ.get("DSD_HOST_PW"),
+                timeout = timeout
+            )
+            sftp = client.open_sftp()
+            sftp.put(path_local, path_remote)
+            sftp.close()
+        finally:
+            client.close()
 
 
 
