@@ -89,7 +89,7 @@ class PlatformDeployer:
             do_utils.get_ssh_key_ids_digitalocean()
 
             # Make a new droplet, and get droplet ID.
-            cmd = f"doctl compute droplet create dsd-e2e-test --image ubuntu-25-04-x64 --size s-1vcpu-1gb --region nyc3 -o json --ssh-keys {plugin_config.path_ssh_key.as_posix()}"
+            cmd = f"doctl compute droplet create dsd-e2e-test --image ubuntu-25-04-x64 --size s-1vcpu-1gb --region nyc3 -o json --ssh-keys {plugin_config.ssh_key_id}"
             output = plugin_utils.run_quick_command(cmd).stdout.decode()
             plugin_utils.write_output(output, write_to_console=False)
 
@@ -143,6 +143,7 @@ class PlatformDeployer:
 
     def _connect_server(self):
         """Make sure we can connect to the server, with an appropriate username."""
+        breakpoint()
         do_utils.set_server_username()
         do_utils.configure_firewall()
 
