@@ -86,7 +86,7 @@ class PlatformDeployer:
             plugin_utils.write_output("Creating droplet on Digital Ocean...")
 
             # Get SSH key ID.
-            plugin_config.ssh_key_id = do_utils.get_ssh_key_ids_digitalocean()
+            do_utils.get_ssh_key_ids_digitalocean()
 
             # Make a new droplet, and get droplet ID.
             cmd = f"doctl compute droplet create dsd-e2e-test --image ubuntu-25-04-x64 --size s-1vcpu-1gb --region nyc3 -o json --ssh-keys {plugin_config.path_ssh_key.as_posix()}"

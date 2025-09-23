@@ -16,7 +16,7 @@ from .plugin_config import plugin_config
 
 
 def get_ssh_key_ids_digitalocean():
-    """Get any existing ssh key IDs on Digital Ocean."""
+    """Get a DigitalOcean ssh key ID."""
     cmd = "doctl compute ssh-key list -o json"
     output = plugin_utils.run_quick_command(cmd, skip_logging=True).stdout.decode()
     key_dicts = json.loads(output)
@@ -30,7 +30,8 @@ def get_ssh_key_ids_digitalocean():
         proceed = plugin_utils.get_confirmation(msg, skip_logging=True)
 
         if proceed:
-            return ssh_key_id
+            plugin_utils.ssh_key_id = ssh_key_id
+            return
         else:
             msg = "Can't proceed without an SSH key id."
             raise DSDCommandError(msg)
