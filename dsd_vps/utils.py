@@ -84,9 +84,14 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                     )
                 except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError) as e:
                     plugin_utils.write_output(str(e))
-                    plugin_utils.write_output(f"      Attempt failed, waiting {pause}s...")
-                    time.sleep(pause)
+                    plugin_utils.write_output("      Attempt failed.")
                     num_tries += 1
+
+                    if num_tries == max_tries:
+                        raise e
+                    else:
+                        print(f"     Waiting {pause}s...")
+                        time.sleep(pause)
                 else:
                     break
 
@@ -330,14 +335,25 @@ def add_server_user():
         return
 
     # Set the password.
-    plugin_utils.write_output("  Setting password; will not display or log this.")
-    password = os.environ.get("DSD_HOST_PW")
-    if not password:
-        prompt = "\n\nWhat password would you like to set for django_user? "
-        password = input(prompt)
+    if password := os.environ.get("DSD_HOST_PW"):
+        plugin_utils.write_output("  Setting password; will not display or log this.")
+        cmd = f'echo "{django_username}:{password}" | chpasswd'
+        run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
 
-    cmd = f'echo "{django_username}:{password}" | chpasswd'
-    run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
+    if plugin_config.path_ssh_key:
+        # Copy ssh keys for this user.
+        # Make ~/.ssh
+        cmd = f"mkdir /home/{django_username}/.ssh"
+        output = run_server_cmd_ssh(cmd)
+
+        # Copy keys.
+        cmd = f"cp /root/.ssh/authorized_keys /home/{django_username}/.ssh/authorized_keys"
+        output = run_server_cmd_ssh(cmd)
+
+        # Set ownership.
+        cmd = f"chown -R {django_username}:{django_username} /home/{django_username}/.ssh"
+        output = run_server_cmd_ssh(cmd)
+
 
     # Add user to sudo group.
     plugin_utils.write_output("  Adding user to sudo group.")
