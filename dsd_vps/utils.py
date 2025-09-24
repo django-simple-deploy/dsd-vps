@@ -44,7 +44,7 @@ def get_ssh_key_ids_digitalocean():
 
 
 
-def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
+def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, skip_logging=None):
     """Run a command on the server, through an SSH connection.
 
     Returns:
@@ -73,13 +73,12 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
     try:
         if plugin_config.path_ssh_key:
             num_tries = 0
-            pause = 20
-            while num_tries < 10:
+            while num_tries < max_tries:
                 try:
                     plugin_utils.write_output("    Trying to connect using ssh key...")
                     client.connect(
                         hostname = plugin_config.ip_address,
-                        username = "root",
+                        username = dsd_config.server_username,
                         key_filename = plugin_config.path_ssh_key.as_posix(),
                         timeout = timeout
                     )
@@ -223,18 +222,19 @@ def set_server_username():
         plugin_utils.write_output(f"  username: {username}")
         return
 
-    # No custom username. Use "django_user" from this point forward.
+    # # If using ssh keys, create django_user in case they don't exist..
+    # if plugin_config.path_ssh_key:
+    #     dsd_config.
+    #     add_server_user()
+    #     plugin_utils.write_output(f"  username: {dsd_config.server_username}")
+    #     return
+
+    # Using un/pw connection, not ssh keys.
+    # Use "django_user" from this point forward. Try to connect with this default username.
     dsd_config.server_username = "django_user"
-
-    # If using ssh keys, create django_user in case they don't exist..
-    if plugin_config.path_ssh_key:
-        add_server_user()
-        plugin_utils.write_output(f"  username: {dsd_config.server_username}")
-
-    # No custom username, and not using ssh keys. Try to connect with default username.
     try:
-        run_server_cmd_ssh("uptime")
-    except paramiko.ssh_exception.AuthenticationException:
+        run_server_cmd_ssh("uptime", timeout=3)
+    except (paramiko.ssh_exception.AuthenticationException, paramiko.ssh_exception.SSHException, AttributeError):
         # Default non-root user doesn't exist.
         dsd_config.server_username = "root"
         plugin_utils.write_output("  Using root for now...")
@@ -332,6 +332,10 @@ def add_server_user():
     # Set the password.
     plugin_utils.write_output("  Setting password; will not display or log this.")
     password = os.environ.get("DSD_HOST_PW")
+    if not password:
+        prompt = "\n\nWhat password would you like to set for django_user? "
+        password = input(prompt)
+
     cmd = f'echo "{django_username}:{password}" | chpasswd'
     run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
 
