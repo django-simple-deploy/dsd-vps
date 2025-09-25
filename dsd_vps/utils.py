@@ -339,6 +339,12 @@ def add_server_user():
         plugin_utils.write_output("  Setting password; will not display or log this.")
         cmd = f'echo "{django_username}:{password}" | chpasswd'
         run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
+    else:
+        plugin_utils.write_output("  Setting password; will not display or log this.")
+        # DEV: Simple pw for development work.
+        password = "django_user"
+        cmd = f'echo "{django_username}:{password}" | chpasswd'
+        run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
 
     if plugin_config.path_ssh_key:
         # Copy ssh keys for this user.
