@@ -406,16 +406,14 @@ def configure_git(templates_path):
     # Configure ssh keys, so push can happen without prompting for password.
     # Generate key pair.
     path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
-    if path_keyfile.exists():
-        raise DSDCommandError(f"Git ssh keyfile already exists at {path_keyfile}.")
-
-    cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
-    output_obj = plugin_utils.run_quick_command(cmd)
-    stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
-    plugin_utils.write_output(stdout)
-    if stderr:
-        plugin_utils.write_output("--- Error ---")
-        plugin_utils.write_output(stderr)
+    if not path_keyfile.exists():
+        cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
+        output_obj = plugin_utils.run_quick_command(cmd)
+        stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+        plugin_utils.write_output(stdout)
+        if stderr:
+            plugin_utils.write_output("--- Error ---")
+            plugin_utils.write_output(stderr)
 
     # Copy key to server.
     cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
