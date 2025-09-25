@@ -140,7 +140,6 @@ class PlatformDeployer:
 
     def _connect_server(self):
         """Make sure we can connect to the server, with an appropriate username."""
-        breakpoint()
         do_utils.set_server_username()
         do_utils.configure_firewall()
 

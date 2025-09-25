@@ -239,7 +239,7 @@ def set_server_username():
     dsd_config.server_username = "django_user"
     try:
         run_server_cmd_ssh("uptime", timeout=3)
-    except (paramiko.ssh_exception.AuthenticationException, paramiko.ssh_exception.SSHException, AttributeError):
+    except (paramiko.ssh_exception.AuthenticationException, paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, AttributeError, TimeoutError):
         # Default non-root user doesn't exist.
         dsd_config.server_username = "root"
         plugin_utils.write_output("  Using root for now...")
@@ -398,32 +398,33 @@ def configure_git(templates_path):
     if dsd_config.unit_testing:
         return
 
-    # Configure ssh keys, so push can happen without prompting for password.
     if plugin_config.path_ssh_key:
         ipaddr = plugin_config.ip_address
     else:
-        # Generate key pair.
         ipaddr = os.environ.get("DSD_HOST_IPADDR")
-        path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
-        if path_keyfile.exists():
-            raise DSDCommandError(f"Git ssh keyfile already exists at {path_keyfile}.")
 
-        cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
-        output_obj = plugin_utils.run_quick_command(cmd)
-        stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
-        plugin_utils.write_output(stdout)
-        if stderr:
-            plugin_utils.write_output("--- Error ---")
-            plugin_utils.write_output(stderr)
+    # Configure ssh keys, so push can happen without prompting for password.
+    # Generate key pair.
+    path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
+    if path_keyfile.exists():
+        raise DSDCommandError(f"Git ssh keyfile already exists at {path_keyfile}.")
 
-        # Copy key to server.
-        cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
-        output_obj = plugin_utils.run_quick_command(cmd)
-        stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
-        plugin_utils.write_output(stdout)
-        if stderr:
-            plugin_utils.write_output("--- Error ---")
-            plugin_utils.write_output(stderr)
+    cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
+    output_obj = plugin_utils.run_quick_command(cmd)
+    stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    plugin_utils.write_output(stdout)
+    if stderr:
+        plugin_utils.write_output("--- Error ---")
+        plugin_utils.write_output(stderr)
+
+    # Copy key to server.
+    cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
+    output_obj = plugin_utils.run_quick_command(cmd)
+    stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    plugin_utils.write_output(stdout)
+    if stderr:
+        plugin_utils.write_output("--- Error ---")
+        plugin_utils.write_output(stderr)
 
     # Add ssh config to end of config file, if not already present.
     template_path = templates_path / "git_ssh_config_block.txt"
