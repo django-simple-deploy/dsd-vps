@@ -93,6 +93,7 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                         print(f"     Waiting {pause}s...")
                         time.sleep(pause)
                 else:
+                    plugin_utils.write_output("      Connection successful, running command.")
                     break
 
             _stdin, _stdout, _stderr = client.exec_command(cmd)
@@ -162,6 +163,7 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
                 time.sleep(pause)
                 num_tries += 1
             else:
+                plugin_utils.write_output("      Connection successful, running command.")
                 break
 
         sftp = client.open_sftp()
