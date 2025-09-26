@@ -424,7 +424,10 @@ def configure_git(templates_path):
             plugin_utils.write_output(stderr)
 
     # Copy key to server.
-    cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
+    if plugin_config.path_ssh_key:
+        cmd = f"ssh-copy-id -f -i {path_keyfile.as_posix()} -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
+    else:
+        cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
     output_obj = plugin_utils.run_quick_command(cmd)
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)

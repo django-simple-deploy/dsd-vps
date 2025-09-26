@@ -223,6 +223,8 @@ class PlatformDeployer:
         template_path = self.templates_path / "Caddyfile"
         if dsd_config.unit_testing:
             context = {"server_ip_address": None}
+        elif plugin_config.path_ssh_key:
+            context = {"server_ip_address": plugin_config.ip_address}
         else:
             context = {"server_ip_address": os.environ.get("DSD_HOST_IPADDR")}
         contents = plugin_utils.get_template_string(template_path, context)
