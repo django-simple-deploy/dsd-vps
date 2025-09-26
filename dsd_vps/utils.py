@@ -82,7 +82,7 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                         key_filename = plugin_config.path_ssh_key.as_posix(),
                         timeout = timeout
                     )
-                except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError) as e:
+                except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
                     plugin_utils.write_output(str(e))
                     plugin_utils.write_output("      Attempt failed.")
                     num_tries += 1
@@ -157,7 +157,7 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
                     key_filename = plugin_config.path_ssh_key.as_posix(),
                     timeout = timeout
                 )
-            except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError) as e:
+            except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
                 plugin_utils.write_output(str(e))
                 plugin_utils.write_output(f"      Attempt failed, waiting {pause}s...")
                 time.sleep(pause)
