@@ -46,12 +46,6 @@ class PlatformDeployer:
 
         # Configure server.
         self._connect_server()
-
-        # DEV: Try doing this before updating server, so confirmations happen early.
-        do_utils.configure_git(self.templates_path)
-
-
-        
         self._update_server()
         self._setup_server()
         
@@ -176,13 +170,9 @@ class PlatformDeployer:
         - https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu
         """
         # DEV: Disable during development.
-
-        # DEV: Try configuring git before updating server.
-        # do_utils.configure_git(self.templates_path)
-
-
         do_utils.install_uv()
         do_utils.install_python()
+        do_utils.configure_git(self.templates_path)
         do_utils.install_caddy()
 
     def _add_requirements(self):
