@@ -426,7 +426,7 @@ def configure_git(templates_path):
 
     # Copy key to server.
     if plugin_config.path_ssh_key:
-        cmd = f"ssh-copy-id -f -i {path_keyfile.as_posix()} -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address} -o StrictHostKeyChecking=accept-new"
+        cmd = f"ssh-copy-id -f -i {path_keyfile.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
     else:
         cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
     output_obj = plugin_utils.run_quick_command(cmd)
@@ -457,7 +457,6 @@ def configure_git(templates_path):
 
     # Make a project directory.
     cmd = f"mkdir -p {project_path}"
-    breakpoint()
     run_server_cmd_ssh(cmd)
 
     cmd = f"chown -R {dsd_config.server_username}:{dsd_config.server_username} {project_path}"
