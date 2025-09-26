@@ -330,7 +330,10 @@ class PlatformDeployer:
         do_utils.serve_project()
 
         # Should set self.deployed_url, which will be reported in the success message.
-        self.deployed_url = f"http://{os.environ.get('DSD_HOST_IPADDR')}/"
+        if plugin_config.path_ssh_key:
+            self.deployed_url = f"http://{plugin_config.ip_address}/"
+        else:
+            self.deployed_url = f"http://{os.environ.get('DSD_HOST_IPADDR')}/"
         webbrowser.open(self.deployed_url)
 
 
