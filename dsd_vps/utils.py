@@ -415,6 +415,7 @@ def configure_git(templates_path):
     # Generate key pair.
     path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
     if not path_keyfile.exists():
+        plugin_utils.write_output("  Generating ssh keys...")
         cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
         output_obj = plugin_utils.run_quick_command(cmd)
         stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
@@ -456,6 +457,7 @@ def configure_git(templates_path):
 
     # Make a project directory.
     cmd = f"mkdir -p {project_path}"
+    breakpoint()
     run_server_cmd_ssh(cmd)
 
     cmd = f"chown -R {dsd_config.server_username}:{dsd_config.server_username} {project_path}"
