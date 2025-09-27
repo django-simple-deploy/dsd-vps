@@ -62,9 +62,11 @@ The project will be served over http, which means the browser will almost certai
 
 This is experimental, and you should review the codebase before running this early version on your system. It will modify local files outside of your project, such as `~/.ssh/config` and `~/.ssh/id_rsa_git`.
 
+The current version of dsd-vps only supports ssh-key-based deployment to Digital Ocean, because it only knows how to create resources on that platform. Support for other platforms will be added as the behavior stabilizes.
+
 - Install `dsd-vps`. (If you cloned this repo, you probably want to make a local editable install of `dsd-vps`.)
 - Add `django_simple_deploy` to `INSTALLED_APPS`.
-- Run `python manage.py deploy --automate-all --ssh-key <path_to_ssh_key>`.
+- Run `python manage.py deploy --platform digital_ocean --automate-all --ssh-key <path_to_ssh_key>`.
     - This command takes a while. If you think it might be hanging, look at your VPS instance dashboard. High CPU means it's probably still updating.
     - For development work, it might be reasonable to use a higher spec instance, that will be destroyed in under an hour.
     - The deployment will ask you to confirm a fingerprint before connecting.

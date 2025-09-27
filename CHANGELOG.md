@@ -8,11 +8,13 @@ Changelog: dsd-vps
 
 #### External changes
 
-- blah
+- Supports fully automated deployment to Digital Ocean using ssh keys to access VPS instance. Missing some functionality, such as admin CSS.
+- Adds an ssh-key arg to CLI.
+- Adds --platform arg as well.
 
 #### Internal changes
 
-- blah
+- N/A
 
 ### 0.1.0
 
