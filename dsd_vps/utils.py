@@ -1,5 +1,6 @@
 """Utilities specific to deploying to a VPS."""
 
+import json
 import os
 import time
 from pathlib import Path
@@ -11,8 +12,39 @@ from django_simple_deploy.management.commands.utils import plugin_utils
 from django_simple_deploy.management.commands.utils.plugin_utils import dsd_config
 from django_simple_deploy.management.commands.utils.command_errors import DSDCommandError
 
+from .plugin_config import plugin_config
 
-def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
+
+def get_ssh_key_ids_digitalocean():
+    """Get a DigitalOcean ssh key ID."""
+    cmd = "doctl compute ssh-key list -o json"
+    output = plugin_utils.run_quick_command(cmd, skip_logging=True).stdout.decode()
+    key_dicts = json.loads(output)
+
+    ssh_key_ids = [key_dict["id"] for key_dict in key_dicts]
+
+    if len(ssh_key_ids) == 1:
+        ssh_key_id = ssh_key_ids[0]
+        key_name = key_dicts[0]["name"]
+        msg = f"\nWould you like to use the DO ssh key ID {ssh_key_id}, from the key {key_name}? "
+        proceed = plugin_utils.get_confirmation(msg, skip_logging=True)
+
+        if proceed:
+            plugin_config.ssh_key_id = ssh_key_id
+            return
+        else:
+            msg = "Can't proceed without an SSH key id."
+            raise DSDCommandError(msg)
+
+    # Show keys, in a call to plugin_utils.get_numbered_choice().
+
+
+    # If appropriate, offer to generate a new key.
+
+
+
+
+def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, skip_logging=None):
     """Run a command on the server, through an SSH connection.
 
     Returns:
@@ -39,16 +71,46 @@ def run_server_cmd_ssh(cmd, timeout=10, show_output=True, skip_logging=None):
 
     # Run command, and close connection.
     try:
-        client.connect(
-            hostname = os.environ.get("DSD_HOST_IPADDR"),
-            username = dsd_config.server_username,
-            password = os.environ.get("DSD_HOST_PW"),
-            timeout = timeout
-        )
-        _stdin, _stdout, _stderr = client.exec_command(cmd)
+        if plugin_config.path_ssh_key:
+            num_tries = 0
+            while num_tries < max_tries:
+                try:
+                    plugin_utils.write_output("    Trying to connect using ssh key...")
+                    client.connect(
+                        hostname = plugin_config.ip_address,
+                        username = dsd_config.server_username,
+                        key_filename = plugin_config.path_ssh_key.as_posix(),
+                        timeout = timeout
+                    )
+                except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
+                    plugin_utils.write_output(str(e))
+                    plugin_utils.write_output("      Attempt failed.")
+                    num_tries += 1
 
-        stdout = _stdout.read().decode().strip()
-        stderr = _stderr.read().decode().strip()
+                    if num_tries == max_tries:
+                        raise e
+                    else:
+                        print(f"     Waiting {pause}s...")
+                        time.sleep(pause)
+                else:
+                    plugin_utils.write_output("      Connection successful, running command.")
+                    break
+
+            _stdin, _stdout, _stderr = client.exec_command(cmd)
+
+            stdout = _stdout.read().decode().strip()
+            stderr = _stderr.read().decode().strip()
+        else:
+            client.connect(
+                hostname = os.environ.get("DSD_HOST_IPADDR"),
+                username = dsd_config.server_username,
+                password = os.environ.get("DSD_HOST_PW"),
+                timeout = timeout
+            )
+            _stdin, _stdout, _stderr = client.exec_command(cmd)
+
+            stdout = _stdout.read().decode().strip()
+            stderr = _stderr.read().decode().strip()
     finally:
         client.close()
 
@@ -83,18 +145,44 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     # Copy file, and close connection.
-    try:
-        client.connect(
-            hostname = os.environ.get("DSD_HOST_IPADDR"),
-            username = dsd_config.server_username,
-            password = os.environ.get("DSD_HOST_PW"),
-            timeout = timeout
-        )
+    if plugin_config.path_ssh_key:
+        num_tries = 0
+        pause = 20
+        while num_tries < 10:
+            try:
+                plugin_utils.write_output("    Trying to connect using ssh key...")
+                client.connect(
+                    hostname = plugin_config.ip_address,
+                    username = dsd_config.server_username,
+                    key_filename = plugin_config.path_ssh_key.as_posix(),
+                    timeout = timeout
+                )
+            except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
+                plugin_utils.write_output(str(e))
+                plugin_utils.write_output(f"      Attempt failed, waiting {pause}s...")
+                time.sleep(pause)
+                num_tries += 1
+            else:
+                plugin_utils.write_output("      Connection successful, running command.")
+                break
+
         sftp = client.open_sftp()
         sftp.put(path_local, path_remote)
         sftp.close()
-    finally:
         client.close()
+    else:
+        try:
+            client.connect(
+                hostname = os.environ.get("DSD_HOST_IPADDR"),
+                username = dsd_config.server_username,
+                password = os.environ.get("DSD_HOST_PW"),
+                timeout = timeout
+            )
+            sftp = client.open_sftp()
+            sftp.put(path_local, path_remote)
+            sftp.close()
+        finally:
+            client.close()
 
 
 
@@ -141,11 +229,19 @@ def set_server_username():
         plugin_utils.write_output(f"  username: {username}")
         return
 
-    # No custom username. Try to connect with default username.
+    # # If using ssh keys, create django_user in case they don't exist..
+    # if plugin_config.path_ssh_key:
+    #     dsd_config.
+    #     add_server_user()
+    #     plugin_utils.write_output(f"  username: {dsd_config.server_username}")
+    #     return
+
+    # Using un/pw connection, not ssh keys.
+    # Use "django_user" from this point forward. Try to connect with this default username.
     dsd_config.server_username = "django_user"
     try:
-        run_server_cmd_ssh("uptime")
-    except paramiko.ssh_exception.AuthenticationException:
+        run_server_cmd_ssh("uptime", timeout=3)
+    except (paramiko.ssh_exception.AuthenticationException, paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, AttributeError, TimeoutError):
         # Default non-root user doesn't exist.
         dsd_config.server_username = "root"
         plugin_utils.write_output("  Using root for now...")
@@ -235,13 +331,37 @@ def add_server_user():
     django_username = "django_user"
     plugin_utils.write_output(f"Adding non-root user: {django_username}")
     cmd = f"useradd -m {django_username}"
-    run_server_cmd_ssh(cmd)
+    stdout, stderr = run_server_cmd_ssh(cmd)
+
+    if "already exists" in stderr:
+        return
 
     # Set the password.
-    plugin_utils.write_output("  Setting password; will not display or log this.")
-    password = os.environ.get("DSD_HOST_PW")
-    cmd = f'echo "{django_username}:{password}" | chpasswd'
-    run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
+    if password := os.environ.get("DSD_HOST_PW"):
+        plugin_utils.write_output("  Setting password; will not display or log this.")
+        cmd = f'echo "{django_username}:{password}" | chpasswd'
+        run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
+    else:
+        plugin_utils.write_output("  Setting password; will not display or log this.")
+        # DEV: Simple pw for development work.
+        password = "django_user"
+        cmd = f'echo "{django_username}:{password}" | chpasswd'
+        run_server_cmd_ssh(cmd, show_output=False, skip_logging=True)
+
+    if plugin_config.path_ssh_key:
+        # Copy ssh keys for this user.
+        # Make ~/.ssh
+        cmd = f"mkdir /home/{django_username}/.ssh"
+        output = run_server_cmd_ssh(cmd)
+
+        # Copy keys.
+        cmd = f"cp /root/.ssh/authorized_keys /home/{django_username}/.ssh/authorized_keys"
+        output = run_server_cmd_ssh(cmd)
+
+        # Set ownership.
+        cmd = f"chown -R {django_username}:{django_username} /home/{django_username}/.ssh"
+        output = run_server_cmd_ssh(cmd)
+
 
     # Add user to sudo group.
     plugin_utils.write_output("  Adding user to sudo group.")
@@ -286,23 +406,29 @@ def configure_git(templates_path):
     if dsd_config.unit_testing:
         return
 
+    if plugin_config.path_ssh_key:
+        ipaddr = plugin_config.ip_address
+    else:
+        ipaddr = os.environ.get("DSD_HOST_IPADDR")
+
     # Configure ssh keys, so push can happen without prompting for password.
     # Generate key pair.
-    ipaddr = os.environ.get("DSD_HOST_IPADDR")
     path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
-    if path_keyfile.exists():
-        raise DSDCommandError(f"Git ssh keyfile already exists at {path_keyfile}.")
-
-    cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
-    output_obj = plugin_utils.run_quick_command(cmd)
-    stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
-    plugin_utils.write_output(stdout)
-    if stderr:
-        plugin_utils.write_output("--- Error ---")
-        plugin_utils.write_output(stderr)
+    if not path_keyfile.exists():
+        plugin_utils.write_output("  Generating ssh keys...")
+        cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
+        output_obj = plugin_utils.run_quick_command(cmd)
+        stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+        plugin_utils.write_output(stdout)
+        if stderr:
+            plugin_utils.write_output("--- Error ---")
+            plugin_utils.write_output(stderr)
 
     # Copy key to server.
-    cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
+    if plugin_config.path_ssh_key:
+        cmd = f"ssh-copy-id -f -i {path_keyfile.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
+    else:
+        cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
     output_obj = plugin_utils.run_quick_command(cmd)
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)

@@ -16,6 +16,7 @@ from django.utils.safestring import mark_safe
 
 import requests
 
+from .plugin_config import plugin_config
 from . import deploy_messages as platform_msgs
 from . import utils as do_utils
 
@@ -74,7 +75,67 @@ class PlatformDeployer:
 
     def _prep_automate_all(self):
         """Take any further actions needed if using automate_all."""
-        pass
+        if not dsd_config.automate_all:
+            return
+
+        if not plugin_config.platform:
+            msg = "You must specify a --platform in order to use --automate-all."
+            raise DSDCommandError(msg)
+
+        if plugin_config.platform == "digital_ocean":
+            plugin_utils.write_output("Creating droplet on Digital Ocean...")
+
+            # Get SSH key ID.
+            do_utils.get_ssh_key_ids_digitalocean()
+
+            # Make a new droplet, and get droplet ID.
+            cmd = f"doctl compute droplet create dsd-e2e-test --image ubuntu-25-04-x64 --size s-1vcpu-1gb --region nyc3 -o json --ssh-keys {plugin_config.ssh_key_id}"
+            output = plugin_utils.run_quick_command(cmd).stdout.decode()
+            plugin_utils.write_output(output, write_to_console=False)
+
+            output_json = json.loads(output)
+            plugin_config.droplet_id = output_json[0]["id"]
+
+            msg = f"  Droplet ID: {plugin_config.droplet_id}"
+            plugin_utils.write_output(msg)
+
+            # Sleep 3 seconds to let droplet spin up.
+            pause = 10
+            plugin_utils.write_output(f"    Sleeping {pause} seconds to let droplet spin up...")
+            time.sleep(pause)
+
+            # Get IP address of new droplet.
+            droplet_status = "new"
+            num_tries = 0
+            while droplet_status == "new" and num_tries < 10:
+                plugin_utils.write_output("    Querying for ip_address...")
+
+                cmd = f"doctl compute droplet get {plugin_config.droplet_id} -o json"
+                output = plugin_utils.run_quick_command(cmd).stdout.decode()
+                plugin_utils.write_output(output, write_to_console=False)
+                output_json = json.loads(output)
+
+                droplet_status = output_json[0]["status"]
+
+                if droplet_status == "new":
+                    time.sleep(5)
+                    num_tries += 1
+                
+            # Public IP address should be available
+            # There are two, and they haven't been in a consistent order.
+            # We're looking for the IP address starting with 3 digits.
+            network_dicts = output_json[0]["networks"]["v4"]
+            for network_dict in network_dicts:
+                if network_dict["type"] == "public":
+                    plugin_config.ip_address = network_dict["ip_address"]
+                    break
+
+            if not plugin_config.ip_address:
+                msg = "Could not identify IP address."
+                raise DSDCommandError(msg)
+
+            msg = f"  IP address: {plugin_config.ip_address}"
+            plugin_utils.write_output(msg)
 
 
     def _connect_server(self):
@@ -162,6 +223,8 @@ class PlatformDeployer:
         template_path = self.templates_path / "Caddyfile"
         if dsd_config.unit_testing:
             context = {"server_ip_address": None}
+        elif plugin_config.path_ssh_key:
+            context = {"server_ip_address": plugin_config.ip_address}
         else:
             context = {"server_ip_address": os.environ.get("DSD_HOST_IPADDR")}
         contents = plugin_utils.get_template_string(template_path, context)
@@ -267,7 +330,10 @@ class PlatformDeployer:
         do_utils.serve_project()
 
         # Should set self.deployed_url, which will be reported in the success message.
-        self.deployed_url = f"http://{os.environ.get('DSD_HOST_IPADDR')}/"
+        if plugin_config.path_ssh_key:
+            self.deployed_url = f"http://{plugin_config.ip_address}/"
+        else:
+            self.deployed_url = f"http://{os.environ.get('DSD_HOST_IPADDR')}/"
         webbrowser.open(self.deployed_url)
 
 

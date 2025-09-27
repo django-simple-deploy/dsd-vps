@@ -56,4 +56,21 @@ The `deploy` command will add a new user named `django_user` to the instance, wi
 
 It will add a local ssh key pair for Git, modifying `~/.ssh/config`. The key will be stored at `~/.ssh/id_rsa_git`.
 
-The project will be served over http, which means the browser will probably flag it as insecure.
+The project will be served over http, which means the browser will almost certainly flag it as insecure.
+
+## Automated deployment - using SSH keys
+
+This is experimental, and you should review the codebase before running this early version on your system. It will modify local files outside of your project, such as `~/.ssh/config` and `~/.ssh/id_rsa_git`.
+
+- Install `dsd-vps`. (If you cloned this repo, you probably want to make a local editable install of `dsd-vps`.)
+- Add `django_simple_deploy` to `INSTALLED_APPS`.
+- Run `python manage.py deploy --automate-all --ssh-key <path_to_ssh_key>`.
+    - This command takes a while. If you think it might be hanging, look at your VPS instance dashboard. High CPU means it's probably still updating.
+    - For development work, it might be reasonable to use a higher spec instance, that will be destroyed in under an hour.
+    - The deployment will ask you to confirm a fingerprint before connecting.
+
+The `deploy` command will add a new user named `django_user` to the instance. It will update and configure the server, configure Git on the server, configure the project to be served from the droplet, commit changes, push the project, and open the remote project in a new browser tab.
+
+It will add a local ssh key pair for Git, modifying `~/.ssh/config`. The key will be stored at `~/.ssh/id_rsa_git`.
+
+The project will be served over http, which means the browser will almost certainly flag it as insecure.
