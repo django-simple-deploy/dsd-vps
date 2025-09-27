@@ -147,3 +147,15 @@ def check_log(tmp_proj_dir):
 
 #     print("  Destroying Fly.io database...")
 #     make_sp_call(f"fly apps destroy -y {app_name}-db")
+
+def destroy_project(request):
+    """Destroy the deployed project, and all remote resources."""
+    print("\nCleaning up:")
+
+    droplet_id = request.config.cache.get("droplet_id", None)
+    if not droplet_id:
+        print("  No droplet id found; can't destroy any remote resources.")
+        return None
+
+    print(f"  Destroying DO droplet {droplet_id}...")
+    make_sp_call(f"doctl compute droplet delete {droplet_id}")

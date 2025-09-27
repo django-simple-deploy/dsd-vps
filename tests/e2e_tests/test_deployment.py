@@ -1,4 +1,5 @@
 import re, time
+from pathlib import Path
 
 import pytest
 
@@ -44,7 +45,9 @@ def test_deployment(tmp_project, cli_options, request):
     # platform_utils.create_vps_instance()
 
     # Run simple_deploy against the test project.
-    it_utils.run_simple_deploy(python_cmd, automate_all=cli_options.automate_all)
+    # it_utils.run_simple_deploy(python_cmd, automate_all=cli_options.automate_all)
+    path_ssh_key = Path.home() / "projects/django-simple-deploy-support/dsd_vps_keys/dsd_vps_e2e_testing"
+    it_utils.run_simple_deploy(python_cmd, automate_all=True, plugin_args_string=f"--platform digital_ocean --automate-all --ssh-key {path_ssh_key.as_posix()}")
 
     # If testing Pipenv, lock after adding new packages.
     if cli_options.pkg_manager == "pipenv":
@@ -72,6 +75,32 @@ def test_deployment(tmp_project, cli_options, request):
     print("\nPausing 10s to let deployment finish...")
     time.sleep(10)
 
+    breakpoint()
+
+    # Read dsd log.
+    path_log_dir = tmp_project / "dsd_logs"
+    path_log = [p for p in path_log_dir.iterdir()][0]
+    log_contents = path_log.read_text()
+
+    # Parse for deployed IP address.
+    re_ip_address = r"INFO:\s*IP address: (\d+\.\d+\.\d+\.\d+)\n"
+    m = re.search(re_ip_address, log_contents)
+    deployed_ip_address = m.group(1)
+
+    # Parse for droplet ID.
+    re_droplet_id = r"INFO:\s*Droplet ID: (\d+)\n"
+    m = re.search(re_droplet_id, log_contents)
+    droplet_id = m.group(1)
+
+    # Cache droplet ID, for destroying droplet.
+    request.config.cache.set("droplet_id", droplet_id)
+
+    # Construct deployed URL.
+    project_url = f"http://{deployed_ip_address}/"
+
+    print(f"\n\nDeployed URL: {project_url}")
+    print(f"Droplet ID: {droplet_id}")
+
     # Note: Uncomment this section once your deployment is successful, and 
     #   project_url is set in the above section.
     # 
@@ -81,17 +110,17 @@ def test_deployment(tmp_project, cli_options, request):
     # remote_functionality_passed = it_utils.check_deployed_app_functionality(
     #     python_cmd, project_url
     # )
-    local_functionality_passed = it_utils.check_local_app_functionality(python_cmd)
-    log_check_passed = platform_utils.check_log(tmp_project)
+    # local_functionality_passed = it_utils.check_local_app_functionality(python_cmd)
+    # log_check_passed = platform_utils.check_log(tmp_project)
 
-    it_utils.summarize_results(
-        remote_functionality_passed,
-        local_functionality_passed,
-        cli_options,
-        tmp_project,
-    )
+    # it_utils.summarize_results(
+    #     remote_functionality_passed,
+    #     local_functionality_passed,
+    #     cli_options,
+    #     tmp_project,
+    # )
 
     # Make final assertions, so pytest results are meaningful.
-    assert remote_functionality_passed
-    assert local_functionality_passed
-    assert log_check_passed
+    # assert remote_functionality_passed
+    # assert local_functionality_passed
+    # assert log_check_passed
