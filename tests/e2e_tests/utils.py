@@ -7,6 +7,7 @@ import re, time
 import json
 import subprocess
 import shlex
+from pathlib import Path
 
 import pytest
 
@@ -159,3 +160,34 @@ def destroy_project(request):
 
     print(f"  Destroying DO droplet {droplet_id}...")
     make_sp_call(f"doctl compute droplet delete {droplet_id}")
+
+    # Remove relevant block from ~/.ssh/config
+    print("  Removing config for Git push to this server.")
+
+    breakpoint()
+    from django_simple_deploy.management.commands.utils import plugin_utils
+    import dsd_vps
+
+    # Build the config block, just like it's done in plugin.
+    path_templates = Path(dsd_vps.templates.__path__[0])
+    path_template = path_templates / "git_ssh_config_block.txt"
+    context = {
+        "server_ip": request.config.cache.get("deployed_ip_address", None),
+        "server_username": "django_user",
+    }
+    lines_config_block = plugin_utils.get_template_string(path_template, context).splitlines()
+    lines_config_block = [l.strip() for l in lines_config_block]
+
+    # Remove this block from .ssh/config.
+    path_ssh_config = Path.home() / ".ssh" / "config"
+    lines_ssh_config = path_ssh_config.read_text().splitlines()
+
+    new_lines_ssh_config = []
+    for line in lines_ssh_config:
+        if line.strip() in lines_config_block:
+            continue
+        else:
+            new_lines_ssh_config.append(line)
+
+    new_contents_ssh_config = "\n".join(new_lines_ssh_config)
+    path_ssh_config.write_text(new_contents_ssh_config)

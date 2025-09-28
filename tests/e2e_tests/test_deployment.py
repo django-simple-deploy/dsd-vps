@@ -87,6 +87,9 @@ def test_deployment(tmp_project, cli_options, request):
     m = re.search(re_ip_address, log_contents)
     deployed_ip_address = m.group(1)
 
+    # Cache ip address, for removing Git config block.
+    request.config.cache.set("deployed_ip_address", deployed_ip_address)
+
     # Parse for droplet ID.
     re_droplet_id = r"INFO:\s*Droplet ID: (\d+)\n"
     m = re.search(re_droplet_id, log_contents)
