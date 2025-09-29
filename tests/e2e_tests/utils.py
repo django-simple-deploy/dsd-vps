@@ -98,7 +98,7 @@ def validate_do_cli():
     cmd = "doctl account get"
     cmd_parts = shlex.split(cmd)
     print(f"Checking that CLI is authenticated: {cmd}")
-    # breakpoint()
+
     output = subprocess.run(cmd_parts, capture_output=True)
     stderr = output.stderr.decode()
     if "Unable to initialize DigitalOcean API client" in stderr:
@@ -164,7 +164,6 @@ def destroy_project(request):
     # Remove relevant block from ~/.ssh/config
     print("  Removing config for Git push to this server.")
 
-    breakpoint()
     from django_simple_deploy.management.commands.utils import plugin_utils
     import dsd_vps
 
