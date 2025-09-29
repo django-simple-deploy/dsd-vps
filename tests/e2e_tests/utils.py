@@ -165,10 +165,10 @@ def destroy_project(request):
     print("  Removing config for Git push to this server.")
 
     from django_simple_deploy.management.commands.utils import plugin_utils
-    import dsd_vps
+    from dsd_vps import templates as dsd_vps_templates
 
     # Build the config block, just like it's done in plugin.
-    path_templates = Path(dsd_vps.templates.__path__[0])
+    path_templates = Path(dsd_vps_templates.__path__[0])
     path_template = path_templates / "git_ssh_config_block.txt"
     context = {
         "server_ip": request.config.cache.get("deployed_ip_address", None),

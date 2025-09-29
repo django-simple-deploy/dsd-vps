@@ -75,8 +75,6 @@ def test_deployment(tmp_project, cli_options, request):
     print("\nPausing 10s to let deployment finish...")
     time.sleep(10)
 
-    breakpoint()
-
     # Read dsd log.
     path_log_dir = tmp_project / "dsd_logs"
     path_log = [p for p in path_log_dir.iterdir()][0]
