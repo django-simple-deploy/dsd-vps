@@ -133,22 +133,6 @@ def check_log(tmp_proj_dir):
 
     return True
 
-
-# def destroy_project(request):
-#     """Destroy the deployed project, and all remote resources."""
-#     print("\nCleaning up:")
-
-#     app_name = request.config.cache.get("app_name", None)
-#     if not app_name:
-#         print("  No app name found; can't destroy any remote resources.")
-#         return None
-
-#     print("  Destroying Fly.io project...")
-#     make_sp_call(f"fly apps destroy -y {app_name}")
-
-#     print("  Destroying Fly.io database...")
-#     make_sp_call(f"fly apps destroy -y {app_name}-db")
-
 def destroy_project(request):
     """Destroy the deployed project, and all remote resources."""
     print("\nCleaning up:")
