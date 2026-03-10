@@ -91,7 +91,6 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                     num_tries += 1
 
                     if num_tries == max_tries:
-                        breakpoint()
                         raise e
                     else:
                         print(f"     Waiting {pause}s...")
