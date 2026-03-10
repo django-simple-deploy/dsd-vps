@@ -83,6 +83,8 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                         hostname = plugin_config.ip_address,
                         username = dsd_config.server_username,
                         key_filename = path_private_key,
+                        look_for_keys=False,
+                        allow_agent=False,
                         timeout = timeout
                     )
                 except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
@@ -91,6 +93,7 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                     num_tries += 1
 
                     if num_tries == max_tries:
+                        breakpoint()
                         raise e
                     else:
                         print(f"     Waiting {pause}s...")
@@ -419,18 +422,18 @@ def configure_git(templates_path):
     else:
         ipaddr = os.environ.get("DSD_HOST_IPADDR")
 
-    # Configure ssh keys, so push can happen without prompting for password.
-    # Generate key pair.
-    path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
-    if not path_keyfile.exists():
-        plugin_utils.write_output("  Generating ssh keys...")
-        cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
-        output_obj = plugin_utils.run_quick_command(cmd)
-        stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
-        plugin_utils.write_output(stdout)
-        if stderr:
-            plugin_utils.write_output("--- Error ---")
-            plugin_utils.write_output(stderr)
+    # # Configure ssh keys, so push can happen without prompting for password.
+    # # Generate key pair.
+    # path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
+    # if not path_keyfile.exists():
+    #     plugin_utils.write_output("  Generating ssh keys...")
+    #     cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
+    #     output_obj = plugin_utils.run_quick_command(cmd)
+    #     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    #     plugin_utils.write_output(stdout)
+    #     if stderr:
+    #         plugin_utils.write_output("--- Error ---")
+    #         plugin_utils.write_output(stderr)
 
     # Copy key to server.
     if plugin_config.path_ssh_key:
@@ -444,20 +447,20 @@ def configure_git(templates_path):
         plugin_utils.write_output("--- Error ---")
         plugin_utils.write_output(stderr)
 
-    # Add ssh config to end of config file, if not already present.
-    template_path = templates_path / "git_ssh_config_block.txt"
-    context = {
-        "server_ip": ipaddr,
-        "server_username": dsd_config.server_username,
-    }
-    git_config_block = plugin_utils.get_template_string(template_path, context)
-    path_git_config = Path.home() / ".ssh" / "config"
-    contents_git_config = path_git_config.read_text()
+    # # Add ssh config to end of config file, if not already present.
+    # template_path = templates_path / "git_ssh_config_block.txt"
+    # context = {
+    #     "server_ip": ipaddr,
+    #     "server_username": dsd_config.server_username,
+    # }
+    # git_config_block = plugin_utils.get_template_string(template_path, context)
+    # path_git_config = Path.home() / ".ssh" / "config"
+    # contents_git_config = path_git_config.read_text()
 
-    if git_config_block not in contents_git_config:
-        # Add new config block to ~/.ssh/config.
-        contents = contents_git_config + "\n" + git_config_block
-        path_git_config.write_text(contents)
+    # if git_config_block not in contents_git_config:
+    #     # Add new config block to ~/.ssh/config.
+    #     contents = contents_git_config + "\n" + git_config_block
+    #     path_git_config.write_text(contents)
 
     # Set up project on remote.
     template_path = templates_path / "post-receive"
@@ -535,7 +538,11 @@ def push_project():
     if dsd_config.unit_testing:
         return
 
-    cmd = f"git push do_server main --force"
+    # Assume private key exists alongside public key.
+    path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
+
+    # cmd = f"git push do_server main --force"
+    cmd = f'GIT_SSH_COMMAND="ssh -i {path_private_key} -o IdentitiesOnly=yes" git push do_server main --force'
     output_obj = plugin_utils.run_quick_command(cmd)
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)
