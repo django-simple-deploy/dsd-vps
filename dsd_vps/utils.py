@@ -149,6 +149,9 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
 
     # Copy file, and close connection.
     if plugin_config.path_ssh_key:
+        # Assume private key exists alongside public key.
+        path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
+
         num_tries = 0
         pause = 20
         while num_tries < 10:
@@ -157,7 +160,7 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
                 client.connect(
                     hostname = plugin_config.ip_address,
                     username = dsd_config.server_username,
-                    key_filename = plugin_config.path_ssh_key.as_posix(),
+                    key_filename = path_private_key,
                     timeout = timeout
                 )
             except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
