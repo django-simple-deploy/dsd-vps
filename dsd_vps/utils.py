@@ -72,6 +72,9 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
     # Run command, and close connection.
     try:
         if plugin_config.path_ssh_key:
+            # Assume private key exists alongside public key.
+            path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
+
             num_tries = 0
             while num_tries < max_tries:
                 try:
@@ -79,7 +82,7 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                     client.connect(
                         hostname = plugin_config.ip_address,
                         username = dsd_config.server_username,
-                        key_filename = plugin_config.path_ssh_key.as_posix(),
+                        key_filename = path_private_key,
                         timeout = timeout
                     )
                 except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
@@ -88,6 +91,7 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                     num_tries += 1
 
                     if num_tries == max_tries:
+                        breakpoint()
                         raise e
                     else:
                         print(f"     Waiting {pause}s...")
@@ -223,18 +227,19 @@ def set_server_username():
     """
     plugin_utils.write_output("Determining server username...")
 
+    # Set username based on env var whenever it's available.
     if (username := os.environ.get("DO_DJANGO_USER")):
-        # Use this custom username.
         dsd_config.server_username = username
         plugin_utils.write_output(f"  username: {username}")
         return
 
-    # # If using ssh keys, create django_user in case they don't exist..
-    # if plugin_config.path_ssh_key:
-    #     dsd_config.
-    #     add_server_user()
-    #     plugin_utils.write_output(f"  username: {dsd_config.server_username}")
-    #     return
+    # If using ssh keys, create django_user in case they don't exist..
+    if plugin_config.path_ssh_key:
+        # Use root, as that's the only user at this point.
+        dsd_config.server_username = "root"
+        add_server_user()
+        plugin_utils.write_output(f"  username: {dsd_config.server_username}")
+        return
 
     # Using un/pw connection, not ssh keys.
     # Use "django_user" from this point forward. Try to connect with this default username.
@@ -322,6 +327,7 @@ def add_server_user():
     Raises:
         DSDCommandError: If unable to connect using new user.
     """
+    # DEV: This should be taken care of in the function that calls add_server_user().
     # # Leave if there's already a non-root user.
     # username = os.environ.get("DSD_HOST_USERNAME")
     # if (username != "root") or dsd_config.unit_testing:
