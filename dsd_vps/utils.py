@@ -503,7 +503,7 @@ def configure_git(templates_path):
     plugin_utils.write_output("  Adding remote to local Git project.")
     # cmd = f"git remote add do_server '{dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{dsd_config.local_project_name}.git'"
     # cmd = f"git remote add do_server 'git-server:/home/{dsd_config.server_username}/{dsd_config.local_project_name}.git'"
-    cmd = f"git remote add do_server '{dsd_config.server_username}@{plugin_config.ip_address}:/{dsd_config.server_username}/{dsd_config.local_project_name}.git'"
+    cmd = f"git remote add do_server '{dsd_config.server_username}@{plugin_config.ip_address}:/home/{dsd_config.server_username}/{dsd_config.local_project_name}.git'"
     output_obj = plugin_utils.run_quick_command(cmd)
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)
@@ -544,9 +544,8 @@ def push_project():
     path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
 
     # cmd = f"git push do_server main --force"
-    breakpoint()
     cmd = f'GIT_SSH_COMMAND="ssh -i {path_private_key} -o IdentitiesOnly=yes" git push do_server main --force'
-    output_obj = plugin_utils.run_quick_command(cmd)
+    output_obj = plugin_utils.run_quick_command(cmd, shell=True)
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)
     if stderr:
