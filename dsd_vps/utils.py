@@ -93,7 +93,6 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                     num_tries += 1
 
                     if num_tries == max_tries:
-                        breakpoint()
                         raise e
                     else:
                         print(f"     Waiting {pause}s...")
@@ -437,8 +436,11 @@ def configure_git(templates_path):
 
     # Copy key to server.
     if plugin_config.path_ssh_key:
+        # Assume private key exists alongside public key.
+        path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
         # cmd = f"ssh-copy-id -f -i {path_keyfile.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
-        cmd = f"ssh-copy-id -f -i {plugin_config.path_ssh_key.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
+        # cmd = f"ssh-copy-id -f -i {plugin_config.path_ssh_key.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
+        cmd = f"ssh-copy-id -f -i {plugin_config.path_ssh_key.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={path_private_key} {dsd_config.server_username}@{plugin_config.ip_address}"
     else:
         cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
     output_obj = plugin_utils.run_quick_command(cmd)
@@ -544,8 +546,29 @@ def push_project():
     path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
 
     # cmd = f"git push do_server main --force"
-    cmd = f'GIT_SSH_COMMAND="ssh -i {path_private_key} -o IdentitiesOnly=yes" git push do_server main --force'
-    output_obj = plugin_utils.run_quick_command(cmd, shell=True)
+    # cmd = f'GIT_SSH_COMMAND="ssh -i {path_private_key} -o IdentitiesOnly=yes" git push do_server main --force'
+    # output_obj = plugin_utils.run_quick_command(cmd, shell=True)
+    # stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    # plugin_utils.write_output(stdout)
+    # if stderr:
+    #     plugin_utils.write_output("--- Error ---")
+    #     plugin_utils.write_output(stderr)
+
+    # DEV: Figure out a subprocess call that works here, then figure out how to
+    # to make this call using a plugin_utils call.
+    import subprocess
+    env = os.environ.copy()
+    env["GIT_SSH_COMMAND"] = (
+        f'ssh -i "{path_private_key}" -o IdentitiesOnly=yes'
+    )
+
+    breakpoint()
+    output_obj = subprocess.run(
+        ["git", "push", "do_server", "main", "--force"],
+        capture_output=True,
+        env=env,
+    )
+
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)
     if stderr:
