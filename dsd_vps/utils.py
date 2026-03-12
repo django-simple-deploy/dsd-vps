@@ -562,7 +562,6 @@ def push_project():
         f'ssh -i "{path_private_key}" -o IdentitiesOnly=yes'
     )
 
-    breakpoint()
     output_obj = subprocess.run(
         ["git", "push", "do_server", "main", "--force"],
         capture_output=True,
