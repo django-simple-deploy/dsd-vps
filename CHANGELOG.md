@@ -4,7 +4,7 @@ Changelog: dsd-vps
 0.1 - Provisional support for deployments
 ---
 
-### (Unreleased)
+### 0.1.1
 
 #### External changes
 

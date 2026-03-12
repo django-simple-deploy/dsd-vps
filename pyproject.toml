@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dsd-vps"
-version = "0.1.0"
+version = "0.1.1"
 description = "A plugin for django-simple-deploy, supporting deployments to VPS providers."
 readme = "README.md"
 
