@@ -72,6 +72,9 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
     # Run command, and close connection.
     try:
         if plugin_config.path_ssh_key:
+            # Assume private key exists alongside public key.
+            path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
+
             num_tries = 0
             while num_tries < max_tries:
                 try:
@@ -79,7 +82,9 @@ def run_server_cmd_ssh(cmd, timeout=10, max_tries=3, pause=3, show_output=True, 
                     client.connect(
                         hostname = plugin_config.ip_address,
                         username = dsd_config.server_username,
-                        key_filename = plugin_config.path_ssh_key.as_posix(),
+                        key_filename = path_private_key,
+                        look_for_keys=False,
+                        allow_agent=False,
                         timeout = timeout
                     )
                 except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
@@ -146,6 +151,9 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
 
     # Copy file, and close connection.
     if plugin_config.path_ssh_key:
+        # Assume private key exists alongside public key.
+        path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
+
         num_tries = 0
         pause = 20
         while num_tries < 10:
@@ -154,7 +162,7 @@ def copy_to_server(path_local, path_remote, timeout=10, skip_logging=None):
                 client.connect(
                     hostname = plugin_config.ip_address,
                     username = dsd_config.server_username,
-                    key_filename = plugin_config.path_ssh_key.as_posix(),
+                    key_filename = path_private_key,
                     timeout = timeout
                 )
             except (paramiko.ssh_exception.SSHException, paramiko.ssh_exception.NoValidConnectionsError, TimeoutError, ConnectionResetError) as e:
@@ -223,18 +231,19 @@ def set_server_username():
     """
     plugin_utils.write_output("Determining server username...")
 
+    # Set username based on env var whenever it's available.
     if (username := os.environ.get("DO_DJANGO_USER")):
-        # Use this custom username.
         dsd_config.server_username = username
         plugin_utils.write_output(f"  username: {username}")
         return
 
-    # # If using ssh keys, create django_user in case they don't exist..
-    # if plugin_config.path_ssh_key:
-    #     dsd_config.
-    #     add_server_user()
-    #     plugin_utils.write_output(f"  username: {dsd_config.server_username}")
-    #     return
+    # If using ssh keys, create django_user in case they don't exist..
+    if plugin_config.path_ssh_key:
+        # Use root, as that's the only user at this point.
+        dsd_config.server_username = "root"
+        add_server_user()
+        plugin_utils.write_output(f"  username: {dsd_config.server_username}")
+        return
 
     # Using un/pw connection, not ssh keys.
     # Use "django_user" from this point forward. Try to connect with this default username.
@@ -322,6 +331,7 @@ def add_server_user():
     Raises:
         DSDCommandError: If unable to connect using new user.
     """
+    # DEV: This should be taken care of in the function that calls add_server_user().
     # # Leave if there's already a non-root user.
     # username = os.environ.get("DSD_HOST_USERNAME")
     # if (username != "root") or dsd_config.unit_testing:
@@ -411,22 +421,26 @@ def configure_git(templates_path):
     else:
         ipaddr = os.environ.get("DSD_HOST_IPADDR")
 
-    # Configure ssh keys, so push can happen without prompting for password.
-    # Generate key pair.
-    path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
-    if not path_keyfile.exists():
-        plugin_utils.write_output("  Generating ssh keys...")
-        cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
-        output_obj = plugin_utils.run_quick_command(cmd)
-        stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
-        plugin_utils.write_output(stdout)
-        if stderr:
-            plugin_utils.write_output("--- Error ---")
-            plugin_utils.write_output(stderr)
+    # # Configure ssh keys, so push can happen without prompting for password.
+    # # Generate key pair.
+    # path_keyfile = Path.home() / ".ssh" / "id_rsa_git"
+    # if not path_keyfile.exists():
+    #     plugin_utils.write_output("  Generating ssh keys...")
+    #     cmd = f'ssh-keygen -t rsa -b 4096 -C "{dsd_config.server_username}@{ipaddr}" -f {path_keyfile.as_posix()} -N ""'
+    #     output_obj = plugin_utils.run_quick_command(cmd)
+    #     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    #     plugin_utils.write_output(stdout)
+    #     if stderr:
+    #         plugin_utils.write_output("--- Error ---")
+    #         plugin_utils.write_output(stderr)
 
     # Copy key to server.
     if plugin_config.path_ssh_key:
-        cmd = f"ssh-copy-id -f -i {path_keyfile.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
+        # Assume private key exists alongside public key.
+        path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
+        # cmd = f"ssh-copy-id -f -i {path_keyfile.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
+        # cmd = f"ssh-copy-id -f -i {plugin_config.path_ssh_key.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={plugin_config.path_ssh_key} {dsd_config.server_username}@{plugin_config.ip_address}"
+        cmd = f"ssh-copy-id -f -i {plugin_config.path_ssh_key.as_posix()} -o StrictHostKeyChecking=accept-new -o IdentityFile={path_private_key} {dsd_config.server_username}@{plugin_config.ip_address}"
     else:
         cmd = f"ssh-copy-id -i ~/.ssh/id_rsa_git.pub git@{ipaddr}"
     output_obj = plugin_utils.run_quick_command(cmd)
@@ -436,20 +450,20 @@ def configure_git(templates_path):
         plugin_utils.write_output("--- Error ---")
         plugin_utils.write_output(stderr)
 
-    # Add ssh config to end of config file, if not already present.
-    template_path = templates_path / "git_ssh_config_block.txt"
-    context = {
-        "server_ip": ipaddr,
-        "server_username": dsd_config.server_username,
-    }
-    git_config_block = plugin_utils.get_template_string(template_path, context)
-    path_git_config = Path.home() / ".ssh" / "config"
-    contents_git_config = path_git_config.read_text()
+    # # Add ssh config to end of config file, if not already present.
+    # template_path = templates_path / "git_ssh_config_block.txt"
+    # context = {
+    #     "server_ip": ipaddr,
+    #     "server_username": dsd_config.server_username,
+    # }
+    # git_config_block = plugin_utils.get_template_string(template_path, context)
+    # path_git_config = Path.home() / ".ssh" / "config"
+    # contents_git_config = path_git_config.read_text()
 
-    if git_config_block not in contents_git_config:
-        # Add new config block to ~/.ssh/config.
-        contents = contents_git_config + "\n" + git_config_block
-        path_git_config.write_text(contents)
+    # if git_config_block not in contents_git_config:
+    #     # Add new config block to ~/.ssh/config.
+    #     contents = contents_git_config + "\n" + git_config_block
+    #     path_git_config.write_text(contents)
 
     # Set up project on remote.
     template_path = templates_path / "post-receive"
@@ -490,7 +504,8 @@ def configure_git(templates_path):
 
     plugin_utils.write_output("  Adding remote to local Git project.")
     # cmd = f"git remote add do_server '{dsd_config.server_username}@{os.environ.get("DSD_HOST_IPADDR")}:{dsd_config.local_project_name}.git'"
-    cmd = f"git remote add do_server 'git-server:/home/{dsd_config.server_username}/{dsd_config.local_project_name}.git'"
+    # cmd = f"git remote add do_server 'git-server:/home/{dsd_config.server_username}/{dsd_config.local_project_name}.git'"
+    cmd = f"git remote add do_server '{dsd_config.server_username}@{plugin_config.ip_address}:/home/{dsd_config.server_username}/{dsd_config.local_project_name}.git'"
     output_obj = plugin_utils.run_quick_command(cmd)
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)
@@ -527,8 +542,32 @@ def push_project():
     if dsd_config.unit_testing:
         return
 
-    cmd = f"git push do_server main --force"
-    output_obj = plugin_utils.run_quick_command(cmd)
+    # Assume private key exists alongside public key.
+    path_private_key = plugin_config.path_ssh_key.with_suffix("").as_posix()
+
+    # cmd = f"git push do_server main --force"
+    # cmd = f'GIT_SSH_COMMAND="ssh -i {path_private_key} -o IdentitiesOnly=yes" git push do_server main --force'
+    # output_obj = plugin_utils.run_quick_command(cmd, shell=True)
+    # stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
+    # plugin_utils.write_output(stdout)
+    # if stderr:
+    #     plugin_utils.write_output("--- Error ---")
+    #     plugin_utils.write_output(stderr)
+
+    # DEV: Figure out a subprocess call that works here, then figure out how to
+    # to make this call using a plugin_utils call.
+    import subprocess
+    env = os.environ.copy()
+    env["GIT_SSH_COMMAND"] = (
+        f'ssh -i "{path_private_key}" -o IdentitiesOnly=yes'
+    )
+
+    output_obj = subprocess.run(
+        ["git", "push", "do_server", "main", "--force"],
+        capture_output=True,
+        env=env,
+    )
+
     stdout, stderr = output_obj.stdout.decode(), output_obj.stderr.decode()
     plugin_utils.write_output(stdout)
     if stderr:
